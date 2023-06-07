@@ -1,0 +1,15 @@
+# vscode: go inside vscode settings and search "Clang_format_style". Check that selected value is "file"
+# check more formatting options: https://clang.llvm.org/docs/ClangFormatStyleOptions.html
+
+BasedOnStyle: LLVM
+IndentWidth: 4
+AllowShortIfStatementsOnASingleLine: false
+BreakBeforeBraces: Attach
+AllowAllParametersOfDeclarationOnNextLine: true
+AllowShortFunctionsOnASingleLine: None
+AllowShortEnumsOnASingleLine: false
+IndentCaseLabels: true
+AlignConsecutiveMacros: AcrossEmptyLines
+SortIncludes: CaseInsensitive
+AlignTrailingComments: true
+PointerAlignment: Right
