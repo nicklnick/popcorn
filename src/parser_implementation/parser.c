@@ -4,27 +4,15 @@
 #include <assert.h>
 #include <stdio.h>
 
-#include "pop_parser.h"
+#include "parser.h"
 
-#define ARGUMENT_SIZE 40
-
-/* CDT del parser */
 struct parser {
-    /** tipificación para cada caracter */
+    // TODO: probably remove classes in the future
     const unsigned     *classes;
-    /** definición de estados */
     const struct parser_definition *def;
 
-    /* estado actual */
-    unsigned            state;
-    /* buffer para argumento */
-    char argument[ARGUMENT_SIZE];
-    /* indice del buffer*/
-    int index;
-    /* evento que se retorna */
-    struct parser_event e1;
-    /* evento que se retorna */
-    struct parser_event e2;
+    unsigned state;
+    struct parser_event event;
 };
 
 void
@@ -43,7 +31,6 @@ parser_init(const unsigned *classes,
         ret->classes = classes;
         ret->def     = def;
         ret->state   = def->start_state;
-        ret->index = 0;
     }
     return ret;
 }
@@ -54,15 +41,11 @@ parser_reset(struct parser *p) {
 }
 
 struct parser_event * parser_feed(struct parser *p, const uint8_t c) {
-    // tipificación de caracteres (por ahora no tenemos)
+    // TODO: probably remove this
     const unsigned type = p->classes[c];
-
-    p->e1.next = p->e2.next = 0;
     
-    //recuperamos la transición actual 
     const struct parser_state_transition *state = p->def->states[p->state];
 
-    //cantidad de transiciones del estado
     const size_t n                              = p->def->states_n[p->state];
     bool matched   = false;
 
@@ -79,16 +62,12 @@ struct parser_event * parser_feed(struct parser *p, const uint8_t c) {
         }
 
         if(matched) {
-            state[i].act1(&p->e1, c);
-            if(state[i].act2 != NULL) {
-                p->e1.next = &p->e2;
-                state[i].act2(&p->e2, c);
-            }
+            state[i].action(&p->event, c);
             p->state = state[i].dest;
             break;
         }
     }
-    return &p->e1;
+    return &p->event;
 }
 
 static const unsigned classes[0xFF] = {0x00};
