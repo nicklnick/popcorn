@@ -6,5 +6,6 @@
 
 int setupServerSocket(int);
 int acceptConnection(int serverSock);
+int handleConnection(int clientSocket);
 
 #endif
