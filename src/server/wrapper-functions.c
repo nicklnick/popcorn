@@ -5,7 +5,7 @@
 ssize_t _recv(int sockfd, void *buf, size_t len, int flags) {
     ssize_t result;
 
-    if ((result = recv(sockfd, buf, len, flags) < 0)) {
+    if ((result = recv(sockfd, buf, len, flags)) < 0) {
         perror("recv()");
         exit(EXIT_FAILURE);
     }
