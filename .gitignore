@@ -58,6 +58,9 @@ Module.symvers
 Mkfile.old
 dkms.conf
 
+### IntelliJ ###
+.idea/
+.gitignore
 ### VisualStudioCode ###
 .vscode/*
 !.vscode/settings.json
@@ -78,3 +81,7 @@ dkms.conf
 .ionide
 
 # End of https://www.toptal.com/developers/gitignore/api/visualstudiocode,c
+/CMakeLists.txt
+/cmake-build-debug/
+/.vscode/
+/.idea/
