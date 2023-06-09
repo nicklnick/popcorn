@@ -1,4 +1,8 @@
 #include "command_parser.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include <string.h>
 
 /** Util that calculates length of an array */
 #define N(x) (sizeof(x)/sizeof((x)[0]))
@@ -78,4 +82,14 @@ static struct parser_definition command_parser_def = {
 
 struct parser * command_parser_init (){
     return parser_init(parser_no_classes(), &command_parser_def);
+}
+
+struct parser_event * get_command(struct parser_event * event, struct parser *command_parser){
+    int c;
+    do{
+        c = getchar();
+        event = parser_feed(command_parser, c);
+    }
+    while(event->type == MAY_VALID);
+    return event;
 }
