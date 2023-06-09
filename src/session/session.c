@@ -1,6 +1,6 @@
 #include "session.h"
-#include "command_parser.h"
-#include "sm.h"
+#include "../parser/command_parser.h"
+#include "../sm/sm.h"
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
