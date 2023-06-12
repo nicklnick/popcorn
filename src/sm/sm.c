@@ -1,4 +1,5 @@
 #include "sm.h"
+#include "../server/pop3-messages.h"
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -8,35 +9,35 @@ typedef struct state_machine {
   state current_state;
 } state_machine;
 
-typedef void (*StateFunc)(state_machine *self, struct parser *parser);
+typedef int (*StateFunc)(state_machine *self, struct parser_event *event, char * buff, int nbytes);
 
-StateFunc start(state_machine *self, struct parser *parser) {
+int start(state_machine *self, struct parser_event *event, char * buff, int nbytes) {
   printf("+OK READY\n");
   printf("[AUTHORIZATION] ENTRY\n\n");
   self->current_state = AUTHORIZATION;
 }
 
-StateFunc auth(state_machine *self, struct parser *parser) {
-  struct parser_event *event = malloc(sizeof(struct parser_event));
-  event = get_command(event, parser);
+int auth(state_machine *self, struct parser_event *event, char * buff, int nbytes) {
 
-  if (strcmp(event->command, "USER") == 0) {
-    printf("[AUTHORIZATION] +OK USER\n");
-  } else if (strcmp(event->command, "PASS") == 0) {
-    printf("[AUTHORIZATION] +OK PASS\n");
+    int len;
+
+  if (strncmp(event->command, USER, nbytes) == 0) {
+      len = strlen(OK_USER);
+      strncpy(buff, OK_USER, len);
+  } else if (strncmp(event->command, PASS, nbytes) == 0) {
+      len = strlen(OK_PASS);
+      strncpy(buff, OK_PASS, len);
     self->current_state = TRANSACTION;
-    printf("[TRANSACTION] ENTRY\n\n");
   } else {
-    printf("[AUTHORIZATION] -ERR \n");
+      len = strlen(ERR_COMMAND);
+      strncpy(buff, ERR_COMMAND, len);
     self->current_state = AUTHORIZATION;
-  } 
+  }
 
-  parser_reset(parser);
+  return len;
 }
 
-StateFunc transaction(state_machine *self, struct parser *parser) {
-  struct parser_event *event = malloc(sizeof(struct parser_event));
-  event = get_command(event, parser); 
+int transaction(state_machine *self, struct parser_event *event, char * buff, int nbytes) {
 
   if (strcmp(event->command, "QUIT") == 0) {
     printf("[TRANSACTION] +OK QUIT\n");
@@ -47,17 +48,11 @@ StateFunc transaction(state_machine *self, struct parser *parser) {
     self->current_state = TRANSACTION;
   }
 
-  parser_reset(parser);
-  free(event);
 }
 
-StateFunc end(state_machine *self, struct parser *parser) {
-  struct parser_event *event = malloc(sizeof(struct parser_event));
-  event = get_command(event, parser);
-
+int end(state_machine *self, struct parser_event *event, char * buff, int nbytes) {
   printf("[END] +OK\n");
   self->current_state = END;
-  parser_reset(parser);
 }
 
 StateFunc func_table[4] = {
@@ -67,15 +62,19 @@ StateFunc func_table[4] = {
     &end,         // END
 };
 
-void dispatch(state_machine *self, struct parser *parser) {
-  (*func_table[self->current_state])(self, parser);
+int dispatch(state_machine *self, struct parser_event *event, char * buff, int nbytes) {
+  return (*func_table[self->current_state])(self, event, buff, nbytes);
 }
 
 state_machine *new_state_machine() {
   state_machine *state_machine = malloc(sizeof(state_machine));
-  state_machine->current_state = START;
+  state_machine->current_state = AUTHORIZATION;
 
   return state_machine;
+}
+
+state get_current_state(state_machine_ptr state_machine){
+    return  state_machine->current_state;
 }
 
 void free_state_machine(state_machine *state_machine) { free(state_machine); }

@@ -14,7 +14,9 @@ typedef struct state_machine *state_machine_ptr;
 
 state_machine_ptr new_state_machine();
 
-void dispatch(state_machine_ptr state_machine, struct parser *parser);
+int dispatch(state_machine_ptr state_machine, struct parser_event *event,char * buff, int nbytes);
+
+state get_current_state(state_machine_ptr state_machine);
 
 void free_state_machine(state_machine_ptr state_machine);
 

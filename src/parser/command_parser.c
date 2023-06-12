@@ -49,7 +49,6 @@ static const struct parser_state_transition ST_COMMAND [] =  {
     {.when = ' ',        .dest = ARGUMENT1,        .action = next_token,},
     {.when = ANY,        .dest = COMMAND,        .action = copy_command,},
 };
-
 static const struct parser_state_transition ST_ARGUMENT1 [] =  {
     {.when = '\n',        .dest = FINISHED,        .action = finish,},
     {.when = ' ',        .dest = ARGUMENT2,        .action = next_token,},
@@ -84,12 +83,13 @@ struct parser * command_parser_init (){
     return parser_init(parser_no_classes(), &command_parser_def);
 }
 
-struct parser_event * get_command(struct parser_event * event, struct parser *command_parser){
-    int c;
-    do{
-        c = getchar();
-        event = parser_feed(command_parser, c);
+struct parser_event * get_command(struct parser_event * event, struct parser *command_parser, struct rw_buffer *buff, size_t count){
+
+    int i;
+    char * buffer = buff->buffer + buff->r_index;
+    for(i = 0 ; i < count && event->type == MAY_VALID ; i++){
+        event = parser_feed(command_parser, buffer[i]);
     }
-    while(event->type == MAY_VALID);
+    buff->r_index+=i;
     return event;
 }

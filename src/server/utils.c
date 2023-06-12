@@ -1,13 +1,14 @@
 #include "utils.h"
 #include <arpa/inet.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
 #include <unistd.h>
 #include "wrapper-functions.h"
+#include "../parser/command_parser.h"
+#include "../sm/sm.h"
 
-#define BUFSIZE 256
+
 
 int setupServerSocket(int port) {
     // IPv4 address
@@ -37,19 +38,47 @@ int acceptConnection(int serverSock) {
 }
 
 int handleConnection(int clientSocket) {
-    char buffer[BUFSIZE] = {0};
 
-    ssize_t bytesRcvd = _recv(clientSocket, buffer, BUFSIZE, 0);
-    while (bytesRcvd > 0) {
-        ssize_t bytesSent = _send(clientSocket, buffer, bytesRcvd, 0);
-        if (bytesSent != bytesRcvd) {
-            perror("send()");
-            exit(EXIT_FAILURE);
+
+    struct parser *command_parser = command_parser_init();
+    struct parser_event *event;
+
+    state_machine_ptr state_machine = new_state_machine();
+
+    struct rw_buffer rbuffer={{0},0,0};
+    char wbuffer[BUFSIZE] = {0};
+
+
+
+    while(get_current_state(state_machine) == AUTHORIZATION) {
+
+        int r_index_cpy = 0;
+
+        event = malloc(sizeof(struct parser_event));
+
+        while(event->type == MAY_VALID){
+            if(rbuffer.r_index == rbuffer.w_index){
+                event->bytes_recv = _recv(clientSocket, rbuffer.buffer + rbuffer.w_index, BUFSIZE-rbuffer.w_index, 0);
+                rbuffer.w_index+=event->bytes_recv;
+            }
+            r_index_cpy = rbuffer.r_index;
+            event = get_command(event, command_parser, &rbuffer, rbuffer.w_index-rbuffer.r_index);
         }
 
-        bytesRcvd = _recv(clientSocket, buffer, BUFSIZE, 0);
+        parser_reset(command_parser);
+
+        int w_bytes = dispatch(state_machine,event,wbuffer,rbuffer.w_index - r_index_cpy);
+
+        ssize_t bytes_sent = 0;
+        while (w_bytes > 0) {
+            bytes_sent = _send(clientSocket, wbuffer + bytes_sent, w_bytes, 0);
+            w_bytes = w_bytes - bytes_sent;
+        }
     }
 
+    free(event);
+    parser_destroy(command_parser);
     close(clientSocket);
+
     return 0;
 }

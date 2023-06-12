@@ -22,6 +22,8 @@ struct parser_event {
     char argument2[ARGUMENT_SIZE];
 
     unsigned short int index;
+
+    int bytes_recv;
 };
 
 struct parser_state_transition {

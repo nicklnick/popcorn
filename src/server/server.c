@@ -14,7 +14,7 @@ typedef enum { false,
 
 int main(int argc, char const *argv[]) {
     close(STDIN_FILENO);
-    close(STDOUT_FILENO);
+    //close(STDOUT_FILENO);
 
     int serverSock = setupServerSocket(PORT);
     if (serverSock < 0) {
