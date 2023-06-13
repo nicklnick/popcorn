@@ -52,7 +52,8 @@ int _listen(int sockfd, int backlog) {
     return result;
 }
 
-int _setsockopt(int sockfd, int level, int optname, const void *optval, socklen_t optlen) {
+int _setsockopt(int sockfd, int level, int optname, const void *optval,
+                socklen_t optlen) {
     int result;
 
     if ((result = setsockopt(sockfd, level, optname, optval, optlen)) < 0) {
@@ -67,6 +68,36 @@ int _accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen) {
 
     if ((result = accept(sockfd, addr, addrlen)) < 0) {
         perror("accept()");
+        exit(EXIT_FAILURE);
+    }
+    return result;
+}
+
+void *_malloc(size_t size) {
+    void *result;
+
+    if ((result = malloc(size)) < 0) {
+        perror("malloc()");
+        exit(EXIT_FAILURE);
+    }
+    return result;
+}
+
+pid_t _waitpid(pid_t pid, int *wstatus, int options) {
+    pid_t result;
+
+    if ((result = waitpid(pid, wstatus, options)) < 0) {
+        perror("waitpid()");
+        exit(EXIT_FAILURE);
+    }
+    return result;
+}
+
+pid_t _fork(void) {
+    pid_t result;
+
+    if ((result = fork()) < 0) {
+        perror("fork()");
         exit(EXIT_FAILURE);
     }
     return result;
