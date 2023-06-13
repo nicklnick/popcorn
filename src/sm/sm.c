@@ -1,5 +1,6 @@
 #include "sm.h"
 #include "../server/pop3-messages.h"
+#include "../server/state-commands.h"
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -20,12 +21,12 @@ int start(state_machine *self, session_ptr session, char *buff, int nbytes) {
 
 int auth(state_machine *self, session_ptr session, char *buff, int nbytes) {
 
-    int len;
+    int len = 0;
     struct parser_event *event = get_session_event(session);
 
     if (strncmp(event->command, USER, nbytes) == 0) {
-        len = strlen(OK_USER);
-        strncpy(buff, OK_USER, len);
+        len =
+            auth_user_command(session, event->argument1, event->arg1_len, buff);
     } else if (strncmp(event->command, PASS, nbytes) == 0) {
         len = strlen(OK_PASS);
         strncpy(buff, OK_PASS, len);
@@ -33,7 +34,6 @@ int auth(state_machine *self, session_ptr session, char *buff, int nbytes) {
     } else {
         len = strlen(ERR_COMMAND);
         strncpy(buff, ERR_COMMAND, len);
-        self->current_state = AUTHORIZATION;
     }
 
     return len;
@@ -41,16 +41,34 @@ int auth(state_machine *self, session_ptr session, char *buff, int nbytes) {
 
 int transaction(state_machine *self, session_ptr session, char *buff,
                 int nbytes) {
+
+    int len = 0;
     struct parser_event *event = get_session_event(session);
 
-    if (strcmp(event->command, "QUIT") == 0) {
-        printf("[TRANSACTION] +OK QUIT\n");
+    if (strcmp(event->command, QUIT) == 0) {
+        len = strlen(OK_QUIT);
+        strncpy(buff, OK_QUIT, len);
         self->current_state = END;
-        printf("[END] ENTRY\n\n");
+    } else if (strncmp(event->command, STAT, nbytes) == 0) {
+
+    } else if (strncmp(event->command, LIST, nbytes) == 0) {
+
+    } else if (strncmp(event->command, RETR, nbytes) == 0) {
+
+    } else if (strncmp(event->command, DELE, nbytes) == 0) {
+
+    } else if (strncmp(event->command, NOOP, nbytes) == 0) {
+        len = strlen(OK_NOOP);
+        strncpy(buff, OK_NOOP, len);
+    } else if (strncmp(event->command, RSET, nbytes) == 0) {
+
     } else {
-        printf("[TRANSACTION] -OK ERROR\n");
+        len = strlen(ERR_COMMAND);
+        strncpy(buff, ERR_COMMAND, len);
         self->current_state = TRANSACTION;
     }
+
+    return len;
 }
 
 int end(state_machine *self, session_ptr session, char *buff, int nbytes) {

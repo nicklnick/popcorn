@@ -18,11 +18,24 @@ struct parser_event *session_read(session_ptr session);
 
 int session_process(session_ptr session);
 
-void session_write(session_ptr session, int wbytes);
+void session_send_response(session_ptr session, int wbytes);
+
+int session_write_response(session_ptr session, char *response,
+                           int response_len);
 
 state get_session_state(session_ptr session);
 
 struct parser_event *get_session_event(session_ptr session);
+
+/**
+ *
+ * @param session
+ * @param username dest buffer to copy the username
+ * @return -1 if no username. Else returns username length
+ */
+int get_username(session_ptr session, char *username);
+
+void set_username(session_ptr session, char *username, int len);
 
 bool session_authenticate(session_ptr session, char *password);
 

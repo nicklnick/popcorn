@@ -14,6 +14,7 @@ static void
 copy_command(struct parser_event *ret, const uint8_t c){
     ret->type    = MAY_VALID;
     ret->command[ret->index++] = c;
+    ret->cmd_len++;
     ret->command[ret->index]='\0';
 }
 
@@ -21,6 +22,7 @@ static void
 copy_argument1(struct parser_event *ret, const uint8_t c){
     ret->type    = MAY_VALID;
     ret->argument1[ret->index++] = c;
+    ret->arg1_len++;
     ret->argument1[ret->index]='\0';
 }
 
@@ -28,6 +30,7 @@ static void
 copy_argument2(struct parser_event *ret, const uint8_t c){
     ret->type    = MAY_VALID;
     ret->argument2[ret->index++] = c;
+    ret->arg2_len++;
     ret->argument2[ret->index]='\0';
 }
 
@@ -41,6 +44,9 @@ static void
 finish(struct parser_event *ret, const uint8_t c){
     ret->type    = VALID;
     ret->index = 0;
+    ret->cmd_len++;
+    ret->arg1_len++;
+    ret->arg2_len++;
 }
 
 /** Transitions */
