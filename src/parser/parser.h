@@ -18,12 +18,13 @@ struct parser_event {
 
     // TODO: change this
     char command[COMMAND_SIZE];
+    int cmd_len;
     char argument1[ARGUMENT_SIZE];
+    int arg1_len;
     char argument2[ARGUMENT_SIZE];
+    int arg2_len;
 
     unsigned short int index;
-
-    int bytes_recv;
 };
 
 struct parser_state_transition {

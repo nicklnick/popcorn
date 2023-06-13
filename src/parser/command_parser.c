@@ -83,13 +83,12 @@ struct parser * command_parser_init (){
     return parser_init(parser_no_classes(), &command_parser_def);
 }
 
-struct parser_event * get_command(struct parser_event * event, struct parser *command_parser, struct rw_buffer *buff, size_t count){
+struct parser_event * get_command(struct parser_event * event, struct parser *command_parser, char * buff, size_t count, size_t * nread){
 
     int i;
-    char * buffer = buff->buffer + buff->r_index;
     for(i = 0 ; i < count && event->type == MAY_VALID ; i++){
-        event = parser_feed(command_parser, buffer[i]);
+        event = parser_feed(command_parser, buff[i]);
     }
-    buff->r_index+=i;
+    *nread = i;
     return event;
 }

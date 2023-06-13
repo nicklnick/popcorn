@@ -35,6 +35,6 @@ enum command_event_types {
  */
 struct parser * command_parser_init ();
 
-struct parser_event * get_command(struct parser_event * event, struct parser *command_parser, struct rw_buffer *buff, size_t count);
+struct parser_event * get_command(struct parser_event * event, struct parser *command_parser, char *buff, size_t count, size_t * nread);
 
 #endif /* _COMMAND_PARSER_H */

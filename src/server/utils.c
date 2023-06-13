@@ -7,7 +7,7 @@
 #include "wrapper-functions.h"
 #include "../parser/command_parser.h"
 #include "../sm/sm.h"
-
+#include "../session/session.h"
 
 
 int setupServerSocket(int port) {
@@ -40,44 +40,17 @@ int acceptConnection(int serverSock) {
 int handleConnection(int clientSocket) {
 
 
-    struct parser *command_parser = command_parser_init();
-    struct parser_event *event;
+    session_ptr client_session = new_client_session(clientSocket);
 
-    state_machine_ptr state_machine = new_state_machine();
+    while(get_session_state(client_session) == AUTHORIZATION) {
 
-    struct rw_buffer rbuffer={{0},0,0};
-    char wbuffer[BUFSIZE] = {0};
+        struct parser_event *event = session_read(client_session);
 
+        int w_bytes = session_process(client_session);
 
-
-    while(get_current_state(state_machine) == AUTHORIZATION) {
-
-        int r_index_cpy = 0;
-
-        event = malloc(sizeof(struct parser_event));
-
-        while(event->type == MAY_VALID){
-            if(rbuffer.r_index == rbuffer.w_index){
-                event->bytes_recv = _recv(clientSocket, rbuffer.buffer + rbuffer.w_index, BUFSIZE-rbuffer.w_index, 0);
-                rbuffer.w_index+=event->bytes_recv;
-            }
-            r_index_cpy = rbuffer.r_index;
-            event = get_command(event, command_parser, &rbuffer, rbuffer.w_index-rbuffer.r_index);
-        }
-
-        parser_reset(command_parser);
-
-        int w_bytes = dispatch(state_machine,event,wbuffer,rbuffer.w_index - r_index_cpy);
-
-        ssize_t bytes_sent = 0;
-        while (w_bytes > 0) {
-            bytes_sent = _send(clientSocket, wbuffer + bytes_sent, w_bytes, 0);
-            w_bytes = w_bytes - bytes_sent;
-        }
+        session_write(client_session,w_bytes);
     }
 
-    free(event);
-    parser_destroy(command_parser);
     close(clientSocket);
 
     return 0;

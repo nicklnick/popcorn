@@ -2,15 +2,24 @@
 #define SESSION_H_
 
 #include "connection.h"
+#include "../sm/sm.h"
 #include <stdbool.h>
 
-typedef struct user_session *session_ptr;
+typedef struct client_session *session_ptr;
 
-session_ptr new_user_session(connection connection);
+session_ptr new_client_session(int client_socket);
 
-session_ptr delete_user_session(session_ptr session);
+session_ptr delete_client_session(session_ptr session);
 
 bool start_session(session_ptr session);
+
+struct parser_event * session_read(session_ptr session);
+
+int session_process(session_ptr session);
+
+void session_write(session_ptr session, int wbytes);
+
+state get_session_state(session_ptr session);
 
 bool session_authenticate(session_ptr session, char *password);
 
