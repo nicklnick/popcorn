@@ -87,3 +87,7 @@ struct user_dir * get_user_dir(char * username, int len){
 
     return NULL;
 }
+
+char * get_mail_dir_path(){
+    return server->root_path;
+}

@@ -30,12 +30,31 @@ void auth_pass_command(session_ptr session, char *arg, int arg_len, char *respon
     int username_len = get_username(session, username);
     if (username_len <= 0) {
         int len = strlen(ERR_PASS_VALID);
-        strncpy(response_buff,OK_USER,len);
+        strncpy(response_buff,ERR_PASS_VALID,len);
+    }
+
+    struct user_dir * user_dir = get_user_dir(username,username_len);
+
+    //TODO: Race condition
+    if(user_dir->is_open){
+        int len = strlen(ERR_PASS_LOCK);
+        strncpy(response_buff,ERR_PASS_LOCK,len);
     }
 
     //BUSCAR CONTRASEÑA DE USER
     // COMPARAR CONTRA ARG
     // NO: ERROR
-    // SI: LOCK DEL STATUS DEL DIR
+
+    get_mail_dir_path();
+    char mail_dir[512] = {0};
+    strcpy(mail_dir,get_mail_dir_path());
+    strcat(mail_dir,"/");
+    strncat(mail_dir,username,username_len);
+
+    DIR * client_dir = opendir(mail_dir);
+    set_client_dir(session,client_dir);
+}
+
+void transaction_stat_command(session_ptr session, char *arg, int arg_len, char *response_buff){
 
 }

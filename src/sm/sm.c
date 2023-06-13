@@ -28,8 +28,7 @@ int auth(state_machine *self, session_ptr session, char *buff, int nbytes) {
         len =
             auth_user_command(session, event->argument1, event->arg1_len, buff);
     } else if (strncmp(event->command, PASS, nbytes) == 0) {
-        len = strlen(OK_PASS);
-        strncpy(buff, OK_PASS, len);
+        auth_pass_command(session,event->argument1,event->arg1_len,buff);
         self->current_state = TRANSACTION;
     } else {
         len = strlen(ERR_COMMAND);

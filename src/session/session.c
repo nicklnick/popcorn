@@ -6,6 +6,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/types.h>
+#include <dirent.h>
 
 #define BUFFER_SIZE 256
 
@@ -19,6 +21,9 @@ typedef struct client_session {
     state_machine_ptr state_machine;
     struct parser *command_parser;
     struct parser_event *event;
+
+    DIR * client_dir;
+
 } client_session;
 
 client_session *new_client_session(int client_socket) {
@@ -113,4 +118,8 @@ void set_username(session_ptr session, char *username, int len) {
 
 struct parser_event *get_session_event(session_ptr session) {
     return session->event;
+}
+
+void set_client_dir(session_ptr session,  DIR * dir){
+    session->client_dir = dir;
 }

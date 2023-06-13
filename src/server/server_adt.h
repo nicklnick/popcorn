@@ -19,6 +19,8 @@ server_ptr get_server_instance();
 
 int get_server_socket();
 
+char * get_mail_dir_path();
+
 void close_server();
 
 #endif // SERVER_ADT_H

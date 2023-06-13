@@ -6,6 +6,8 @@ typedef struct client_session *session_ptr;
 #include "../parser/command_parser.h"
 #include "../sm/sm.h"
 #include "connection.h"
+#include <sys/types.h>
+#include <dirent.h>
 #include <stdbool.h>
 
 session_ptr new_client_session(int client_socket);
@@ -36,6 +38,8 @@ struct parser_event *get_session_event(session_ptr session);
 int get_username(session_ptr session, char *username);
 
 void set_username(session_ptr session, char *username, int len);
+
+void set_client_dir(session_ptr session, DIR * dir);
 
 bool session_authenticate(session_ptr session, char *password);
 
