@@ -1,8 +1,6 @@
 #ifndef SM_H_
 #define SM_H_
 
-#include "../parser/command_parser.h"
-
 typedef enum state {
     START,
     AUTHORIZATION,
@@ -10,11 +8,13 @@ typedef enum state {
     END
 } state;
 
+#include "../session/session.h"
+
 typedef struct state_machine *state_machine_ptr;
 
 state_machine_ptr new_state_machine();
 
-int dispatch(state_machine_ptr state_machine, struct parser_event *event,char * buff, int nbytes);
+int dispatch(state_machine_ptr state_machine, session_ptr session,char * buff, int nbytes);
 
 state get_current_state(state_machine_ptr state_machine);
 

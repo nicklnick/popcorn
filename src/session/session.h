@@ -1,11 +1,12 @@
 #ifndef SESSION_H_
 #define SESSION_H_
 
+typedef struct client_session *session_ptr;
+
 #include "connection.h"
 #include "../sm/sm.h"
+#include "../parser/command_parser.h"
 #include <stdbool.h>
-
-typedef struct client_session *session_ptr;
 
 session_ptr new_client_session(int client_socket);
 
@@ -20,6 +21,8 @@ int session_process(session_ptr session);
 void session_write(session_ptr session, int wbytes);
 
 state get_session_state(session_ptr session);
+
+struct parser_event * get_session_event(session_ptr session);
 
 bool session_authenticate(session_ptr session, char *password);
 

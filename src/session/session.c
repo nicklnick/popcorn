@@ -60,13 +60,9 @@ struct parser_event * session_read(session_ptr session){
 int session_process(session_ptr session){
     size_t wsize = 0;
     char * wbuffer = (char *)buffer_write_ptr(&session->wbuffer,&wsize);
-    int wbytes = dispatch(session->state_machine,session->event,wbuffer,(int)wsize);
+    int wbytes = dispatch(session->state_machine,session,wbuffer,(int)wsize);
     buffer_write_adv(&session->wbuffer,wbytes);
     return wbytes;
-}
-
-state get_session_state(session_ptr session){
-    return get_current_state(session->state_machine);
 }
 
 void session_write(session_ptr session, int wbytes){
@@ -77,4 +73,12 @@ void session_write(session_ptr session, int wbytes){
         buffer_read_adv(&session->wbuffer,bytes_sent);
         wbytes -= bytes_sent;
     }
+}
+
+state get_session_state(session_ptr session){
+    return get_current_state(session->state_machine);
+}
+
+struct parser_event * get_session_event(session_ptr session){
+    return session->event;
 }
