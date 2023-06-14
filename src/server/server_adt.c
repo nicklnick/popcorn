@@ -5,7 +5,7 @@
 #include <string.h>
 #include <sys/types.h>
 
-#define PORT            110
+#define PORT            1110
 
 #define ARRAY_INCREMENT 2
 

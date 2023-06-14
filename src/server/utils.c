@@ -35,19 +35,3 @@ int acceptConnection(int serverSock) {
 
     return _accept(serverSock, (struct sockaddr *)&clientAddr, &clientAddrLen);
 }
-
-int handleConnection(int clientSocket) {
-    session_ptr client_session = new_client_session(clientSocket);
-
-    while (get_session_state(client_session) != END) {
-        struct parser_event *event = session_read(client_session);
-
-        int w_bytes = session_process(client_session);
-
-        session_send_response(client_session, w_bytes);
-    }
-
-    close(clientSocket);
-
-    return 0;
-}

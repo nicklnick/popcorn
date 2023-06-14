@@ -25,12 +25,14 @@ int auth_user_command(session_ptr session, char *arg, int arg_len, char *respons
     return len;
 }
 
-void auth_pass_command(session_ptr session, char *arg, int arg_len, char *response_buff) {
+int auth_pass_command(session_ptr session, char *arg, int arg_len, char *response_buff, bool * change_status) {
     char username[256] = {0};
     int username_len = get_username(session, username);
     if (username_len <= 0) {
         int len = strlen(ERR_PASS_VALID);
         strncpy(response_buff,ERR_PASS_VALID,len);
+        *change_status = false;
+        return len;
     }
 
     struct user_dir * user_dir = get_user_dir(username,username_len);
@@ -39,6 +41,8 @@ void auth_pass_command(session_ptr session, char *arg, int arg_len, char *respon
     if(user_dir->is_open){
         int len = strlen(ERR_PASS_LOCK);
         strncpy(response_buff,ERR_PASS_LOCK,len);
+        *change_status = false;
+        return len;
     }
 
     //BUSCAR CONTRASEÑA DE USER
@@ -53,6 +57,13 @@ void auth_pass_command(session_ptr session, char *arg, int arg_len, char *respon
 
     DIR * client_dir = opendir(mail_dir);
     set_client_dir(session,client_dir);
+    closedir(client_dir);
+
+    int len = strlen(OK_PASS);
+    strncpy(response_buff,OK_PASS,len);
+    *change_status = true;
+    return len;
+
 }
 
 void transaction_stat_command(session_ptr session, char *arg, int arg_len, char *response_buff){

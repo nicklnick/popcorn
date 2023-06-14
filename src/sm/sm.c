@@ -25,11 +25,12 @@ int auth(state_machine *self, session_ptr session, char *buff, int nbytes) {
     struct parser_event *event = get_session_event(session);
 
     if (strncmp(event->command, USER, nbytes) == 0) {
-        len =
-            auth_user_command(session, event->argument1, event->arg1_len, buff);
+        len = auth_user_command(session, event->argument1, event->arg1_len, buff);
     } else if (strncmp(event->command, PASS, nbytes) == 0) {
-        auth_pass_command(session,event->argument1,event->arg1_len,buff);
-        self->current_state = TRANSACTION;
+        bool change_status = false;
+        len = auth_pass_command(session,event->argument1,event->arg1_len,buff, &change_status);
+        if(change_status)
+            self->current_state = TRANSACTION;
     } else {
         len = strlen(ERR_COMMAND);
         strncpy(buff, ERR_COMMAND, len);
