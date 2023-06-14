@@ -5,10 +5,9 @@ typedef struct client_session *session_ptr;
 
 #include "../parser/command_parser.h"
 #include "../sm/sm.h"
-#include "connection.h"
-#include <sys/types.h>
 #include <dirent.h>
 #include <stdbool.h>
+#include <sys/types.h>
 
 session_ptr new_client_session(int client_socket);
 
@@ -30,7 +29,6 @@ state get_session_state(session_ptr session);
 struct parser_event *get_session_event(session_ptr session);
 
 /**
- *
  * @param session
  * @param username dest buffer to copy the username
  * @return -1 if no username. Else returns username length
@@ -39,8 +37,24 @@ int get_username(session_ptr session, char *username);
 
 void set_username(session_ptr session, char *username, int len);
 
-void set_client_dir(session_ptr session, DIR * dir);
+void set_client_dir_pt(session_ptr session, DIR *dir);
+
+DIR *get_client_dir_pt(session_ptr session);
 
 bool session_authenticate(session_ptr session, char *password);
+
+void init_client_dir_mails(session_ptr session);
+
+/**
+ * @param session
+ * @param mail_num Mail to be deleted
+ * @return 0 on success, -1 on error
+ */
+int mark_to_delete(session_ptr session, int mail_num);
+
+/**
+ * @brief Unmarks mails to prevent them from being deleted
+ */
+void unmark_mails(session_ptr session);
 
 #endif /* SESSION_H_ */

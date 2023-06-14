@@ -85,3 +85,6 @@ dkms.conf
 /cmake-build-debug/
 /.vscode/
 /.idea/
+
+# Mail directory for tests
+mail/

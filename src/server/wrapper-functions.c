@@ -76,8 +76,18 @@ int _accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen) {
 void *_malloc(size_t size) {
     void *result;
 
-    if ((result = malloc(size)) < 0) {
+    if ((result = malloc(size)) == NULL) {
         perror("malloc()");
+        exit(EXIT_FAILURE);
+    }
+    return result;
+}
+
+void *_calloc(size_t nmemb, size_t size) {
+    void *result;
+
+    if ((result = calloc(nmemb, size)) == NULL) {
+        perror("calloc()");
         exit(EXIT_FAILURE);
     }
     return result;

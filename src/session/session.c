@@ -2,14 +2,24 @@
 #include "../buffer/buffer.h"
 #include "../parser/command_parser.h"
 #include "../sm/sm.h"
+#include "../utils/file-utils.h"
+#include "../utils/general-utils.h"
+#include "../utils/staus-codes.h"
 #include "wrapper-functions.h"
+#include <dirent.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
-#include <dirent.h>
 
 #define BUFFER_SIZE 256
+
+struct client_dir {
+    DIR *dir_pt;
+
+    int *mails; // has 1 if it is marked to be deleted
+    int total_mails;
+};
 
 typedef struct client_session {
     int socket;
@@ -22,8 +32,7 @@ typedef struct client_session {
     struct parser *command_parser;
     struct parser_event *event;
 
-    DIR * client_dir;
-
+    struct client_dir *client_dir;
 } client_session;
 
 client_session *new_client_session(int client_socket) {
@@ -37,6 +46,7 @@ client_session *new_client_session(int client_socket) {
                 (uint8_t *)session->rbuffer_data);
     buffer_init(&session->wbuffer, BUFFER_SIZE,
                 (uint8_t *)session->wbuffer_data);
+    session->client_dir = _calloc(1, sizeof(struct client_dir));
 
     return session;
 }
@@ -120,6 +130,36 @@ struct parser_event *get_session_event(session_ptr session) {
     return session->event;
 }
 
-void set_client_dir(session_ptr session,  DIR * dir){
-    session->client_dir = dir;
+void set_client_dir_pt(session_ptr session, DIR *dir) {
+    session->client_dir->dir_pt = dir;
+}
+
+DIR *get_client_dir_pt(session_ptr session) {
+    return session->client_dir->dir_pt;
+}
+
+void init_client_dir_mails(session_ptr session) {
+    int file_count = get_file_count(session->client_dir->dir_pt);
+    session->client_dir->mails = (int *)_calloc(file_count, sizeof(int));
+    session->client_dir->total_mails = file_count;
+}
+
+static char is_marked(session_ptr session, int mail_num) {
+    return session->client_dir->mails[mail_num - 1] == true;
+}
+
+int mark_to_delete(session_ptr session, int mail_num) {
+    if (is_marked(session, mail_num) ||
+        !IS_BETWEEN(mail_num, 0, session->client_dir->total_mails)) {
+        return ERROR;
+    }
+
+    session->client_dir->mails[mail_num - 1] = true;
+    return SUCCESS;
+}
+
+void unmark_mails(session_ptr session) {
+    memset(session->client_dir->mails, 0,
+           sizeof(session->client_dir->mails) *
+               session->client_dir->total_mails);
 }

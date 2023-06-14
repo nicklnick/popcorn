@@ -1,11 +1,12 @@
 #include "server_adt.h"
+#include "wrapper-functions.h"
 #include <dirent.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
 
-#define PORT            110
+#define PORT            1110
 
 #define ARRAY_INCREMENT 2
 
@@ -41,7 +42,7 @@ static struct user_dir **init_users_dir(char *root_path, int *count) {
             users_dir = realloc(users_dir, (users_count + ARRAY_INCREMENT) *
                                                sizeof(struct user_dir *));
         }
-        users_dir[users_count] = malloc(sizeof(struct user_dir));
+        users_dir[users_count] = _calloc(1, sizeof(struct user_dir));
         strncpy(users_dir[users_count]->username, mail_dirent->d_name, 256);
         users_count++;
         mail_dirent = readdir(mail_dir);
@@ -52,7 +53,6 @@ static struct user_dir **init_users_dir(char *root_path, int *count) {
 }
 
 struct server *init_server(char *root_path) {
-
     if (server != NULL)
         return server;
 
@@ -66,19 +66,20 @@ struct server *init_server(char *root_path) {
     server->server_sock = server_sock;
     server->root_path = root_path;
     server->users_dir = init_users_dir(root_path, &server->users_count);
+
+    return server;
 }
 
 int get_server_socket() {
     return server->server_sock;
 }
 
-struct user_dir * get_user_dir(char * username, int len){
-
+struct user_dir *get_user_dir(char *username, int len) {
     int i = 0;
-    struct user_dir * user_dir;
+    struct user_dir *user_dir;
 
-    while(server->users_dir[i] != NULL){
-        if(strncmp(username,server->users_dir[i]->username,len) == 0){
+    while (server->users_dir[i] != NULL) {
+        if (strncmp(username, server->users_dir[i]->username, len) == 0) {
             user_dir = server->users_dir[i];
             return user_dir;
         }
@@ -88,6 +89,6 @@ struct user_dir * get_user_dir(char * username, int len){
     return NULL;
 }
 
-char * get_mail_dir_path(){
+char *get_mail_dir_path() {
     return server->root_path;
 }
