@@ -4,25 +4,22 @@
 typedef struct client_session *session_ptr;
 
 #include "../parser/command_parser.h"
+#include "../selector/selector.h"
 #include "../sm/sm.h"
 #include "connection.h"
-#include <sys/types.h>
 #include <dirent.h>
 #include <stdbool.h>
-#include "../selector/selector.h"
-
+#include <sys/types.h>
 
 session_ptr new_client_session(int client_socket);
 
-session_ptr delete_client_session(session_ptr session);
+session_ptr close_client_session(session_ptr session);
 
-bool start_session(session_ptr session);
-
-void session_read(struct selector_key * key);
+void session_read(struct selector_key *key);
 
 int session_process(session_ptr session);
 
-void session_send_response(struct selector_key * key);
+void session_send_response(struct selector_key *key);
 
 state get_session_state(session_ptr session);
 
@@ -38,8 +35,8 @@ int get_username(session_ptr session, char *username);
 
 void set_username(session_ptr session, char *username, int len);
 
-void set_client_dir(session_ptr session, DIR * dir);
+void set_client_dir(session_ptr session, DIR *dir);
 
-fd_handler * get_fd_handler(session_ptr session);
+fd_handler *get_fd_handler(session_ptr session);
 
 #endif /* SESSION_H_ */

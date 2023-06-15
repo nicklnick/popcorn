@@ -3,11 +3,11 @@
 #include "../parser/command_parser.h"
 #include "../sm/sm.h"
 #include "wrapper-functions.h"
+#include <dirent.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
-#include <dirent.h>
 
 #define BUFFER_SIZE 256
 
@@ -21,8 +21,8 @@ typedef struct client_session {
     state_machine_ptr state_machine;
     struct parser *command_parser;
     struct parser_event *event;
-    DIR * client_dir;
-    struct fd_handler * client_fd_handler;
+    DIR *client_dir;
+    struct fd_handler *client_fd_handler;
     int wbytes;
 
 } client_session;
@@ -34,7 +34,8 @@ client_session *new_client_session(int client_socket) {
     session->state_machine = new_state_machine();
     session->command_parser = command_parser_init();
     session->event = _malloc(sizeof(struct parser_event));
-    session->client_fd_handler = malloc(sizeof(fd_handler));
+    session->event->type = MAY_VALID;
+    session->client_fd_handler = calloc(1, sizeof(fd_handler));
     session->client_fd_handler->handle_read = session_read;
     session->client_fd_handler->handle_write = session_send_response;
     session->wbytes = 0;
@@ -46,17 +47,17 @@ client_session *new_client_session(int client_socket) {
     return session;
 }
 
-void session_read(struct selector_key * key) {
+void session_read(struct selector_key *key) {
 
-    session_ptr  session = (session_ptr)key->data;
+    session_ptr session = (session_ptr)key->data;
 
-    if(session->event->type != MAY_VALID){
+    if (session->event->type != MAY_VALID) {
         parser_reset(session->command_parser);
         // FIXME: Tidy up
-        session->event->cmd_len = 0;
         session->event->arg1_len = 0;
         session->event->arg2_len = 0;
-        session->event = _malloc(sizeof(struct parser_event));
+        session->event->cmd_len = 0;
+        session->event = calloc(1, sizeof(fd_handler));
     }
 
     if (session->event->type == MAY_VALID) {
@@ -76,11 +77,10 @@ void session_read(struct selector_key * key) {
         buffer_read_adv(&session->rbuffer, (ssize_t)nread);
     }
 
-    if(session->event->type != MAY_VALID){
+    if (session->event->type != MAY_VALID) {
         session->wbytes = session_process(session);
-        selector_set_interest_key(key,OP_WRITE);
+        selector_set_interest_key(key, OP_WRITE);
     }
-
 }
 
 int session_process(session_ptr session) {
@@ -91,13 +91,13 @@ int session_process(session_ptr session) {
     return wbytes;
 }
 
-void session_send_response(struct selector_key * key) {
+void session_send_response(struct selector_key *key) {
 
     session_ptr session = key->data;
 
-    if(session->wbytes == 0 && buffer_can_read(&session->rbuffer)){
+    if (session->wbytes == 0 && buffer_can_read(&session->rbuffer)) {
         session_read(key);
-        return ;
+        return;
     }
 
     int wbytes = session->wbytes;
@@ -110,9 +110,9 @@ void session_send_response(struct selector_key * key) {
         wbytes -= bytes_sent;
         session->wbytes = wbytes;
     }
-    if(session->wbytes == 0 && !buffer_can_read(&session->rbuffer)){
-        selector_set_interest_key(key,OP_READ);
-        return ;
+    if (session->wbytes == 0 && !buffer_can_read(&session->rbuffer)) {
+        selector_set_interest_key(key, OP_READ);
+        return;
     }
 }
 
@@ -136,10 +136,10 @@ struct parser_event *get_session_event(session_ptr session) {
     return session->event;
 }
 
-void set_client_dir(session_ptr session,  DIR * dir){
+void set_client_dir(session_ptr session, DIR *dir) {
     session->client_dir = dir;
 }
 
-fd_handler * get_fd_handler(session_ptr session){
+fd_handler *get_fd_handler(session_ptr session) {
     return session->client_fd_handler;
 }
