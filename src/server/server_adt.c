@@ -170,7 +170,7 @@ static void free_clients() {
     client_node *current = server->clients;
     while (current != NULL) {
         session_ptr client_session = current->client;
-        // close_client_session(client_session);
+        close_client_session(client_session);
         client_node *to_free = current;
         current = to_free->next;
         free(to_free);

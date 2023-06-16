@@ -24,7 +24,7 @@ void server_passive_accept(struct selector_key *key);
 
 int main(int argc, char const *argv[]) {
     close(STDIN_FILENO);
-    // close(STDOUT_FILENO);
+    close(STDOUT_FILENO);
 
     signal(SIGTERM, sigterm_handler);
     signal(SIGINT, sigterm_handler);

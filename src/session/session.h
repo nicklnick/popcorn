@@ -13,7 +13,7 @@ typedef struct client_session *session_ptr;
 
 session_ptr new_client_session(int client_socket);
 
-session_ptr close_client_session(session_ptr session);
+void close_client_session(session_ptr session);
 
 void session_read(struct selector_key *key);
 

@@ -110,6 +110,7 @@ void session_send_response(struct selector_key *key) {
         wbytes -= bytes_sent;
         session->wbytes = wbytes;
     }
+
     if (session->wbytes == 0 && !buffer_can_read(&session->rbuffer)) {
         selector_set_interest_key(key, OP_READ);
         return;
@@ -142,4 +143,13 @@ void set_client_dir(session_ptr session, DIR *dir) {
 
 fd_handler *get_fd_handler(session_ptr session) {
     return session->client_fd_handler;
+}
+
+void close_client_session(session_ptr session) {
+    free_state_machine(session->state_machine);
+    command_parser_destroy(session->command_parser);
+    // FIXME: Tirar error porque el comand_parser retorna su propio event
+    // entonces ya fue liberado. free(session->event);
+    free(session->client_fd_handler);
+    free(session);
 }
