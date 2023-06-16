@@ -30,6 +30,8 @@ int main(int argc, char const *argv[]) {
     signal(SIGTERM, sigterm_handler);
     signal(SIGINT, sigterm_handler);
 
+    //obtener path mail, obtener char ** pass
+
     init_server("../mail");
 
 
@@ -86,3 +88,10 @@ void server_passive_accept(struct selector_key *key) {
     selector_register(key->s, client_socket, get_fd_handler(client_session),
                       OP_WRITE, client_session);
 }
+
+// void handler_read(struct selector_key * key)
+
+// key->data
+// key->fd: socket_server
+// key->s : selector
+

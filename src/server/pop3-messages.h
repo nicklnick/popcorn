@@ -30,7 +30,8 @@
 #define OK_STAT  "+OK STAT" // we need to append nn mm, so no \r\n
 #define ERR_STAT "-ERR STAT\r\n"
 
-#define OK_LIST  "+OK LIST\r\n"
+#define OK_LIST_NO_ARG "+OK LIST: %d messages (%d octets)\r\n"
+#define OK_LIST_ARG "+OK LIST: %d %d\r\n"
 #define ERR_LIST "-ERR LIST: No such message\r\n"
 
 #define OK_RETR  "+OK RETR\r\n"

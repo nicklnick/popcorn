@@ -70,7 +70,7 @@ int transaction(state_machine *self, session_ptr session, char *buff,
         strcat(buff, "\r\n");
         len += 2;
     } else if (strncmp(event->command, LIST, nbytes) == 0) {
-
+        len = transaction_list_command(session,event->argument1,event->arg1_len,buff);
     } else if (strncmp(event->command, RETR, nbytes) == 0) {
 
     } else if (strncmp(event->command, DELE, nbytes) == 0) {

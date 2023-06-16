@@ -3,6 +3,7 @@
 #include "../server/pop3-messages.h"
 #include "../server/server_adt.h"
 #include "../utils/staus-codes.h"
+#include "../utils/file-utils.h"
 #include "wrapper-functions.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -59,8 +60,9 @@ int auth_pass_command(session_ptr session, char *arg, int arg_len, char *respons
     strncat(mail_dir, username, username_len);
 
     DIR *client_dir = opendir(mail_dir);
+    if(client_dir == NULL)
+        perror("auth_pass_command()");
     set_client_dir_pt(session, client_dir);
-    closedir(client_dir);
 
     int len = strlen(OK_PASS);
     strncpy(response_buff,OK_PASS,len);
@@ -139,4 +141,30 @@ int transaction_rset_command(session_ptr session, char *arg, int arg_len,
                              char *response_buff) {
     unmark_mails(session);
     return SUCCESS;
+}
+
+int transaction_list_command(session_ptr session, char * arg, int arg_len, char * response_buff){
+    DIR * client_dir = get_client_dir_pt(session);
+    long msg = -1;
+
+    if(arg != NULL){
+        msg = strtol(arg,NULL, 10);
+    }
+
+    struct dirent * client_dirent = readdir_files(client_dir,msg);
+
+    char mail_path[MAILPATH_MAX] = {0};
+    char username[NAME_MAX] = {0};
+    int username_len = get_username(session, username);
+    strcpy(mail_path, get_mail_dir_path());
+    strcat(mail_path, "/");
+    strncat(mail_path, username, username_len);
+    strcat(mail_path, "/");
+    strcat(mail_path, client_dirent->d_name);
+
+    struct stat f_stat;
+    stat(mail_path,&f_stat);
+
+    sprintf(response_buff,OK_LIST_ARG,msg,f_stat.st_size);
+    return strlen(response_buff);
 }

@@ -47,7 +47,7 @@ static struct user_dir **init_users_dir(char *root_path, int *count) {
     users_dir = calloc((ARRAY_INCREMENT + 1), sizeof(struct user_dir *));
     while (mail_dirent != NULL) {
         if ((strncmp(".", mail_dirent->d_name, 1) == 0) ||
-            (strncmp("..", mail_dirent->d_name, 1) == 0)) {
+            (strncmp("..", mail_dirent->d_name, 2) == 0)) {
             mail_dirent = readdir(mail_dir);
             continue;
         }
