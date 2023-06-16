@@ -109,8 +109,18 @@ static struct parser_definition command_parser_def = {
     .start_state = COMMAND,
 };
 
-struct parser *command_parser_init() {
+struct parser * command_parser_init() {
     return parser_init(parser_no_classes(), &command_parser_def);
+}
+
+void command_parser_reset(struct parser * parser){
+    parser_reset(parser);
+    struct parser_event * event = get_parser_event(parser);
+    event->type=MAY_VALID;
+    event->index=0;
+    event->arg1_len = 0;
+    event->arg2_len = 0;
+    event->cmd_len = 0;
 }
 
 struct parser_event *get_command(struct parser_event *event,
@@ -124,6 +134,11 @@ struct parser_event *get_command(struct parser_event *event,
     *nread = i;
     return event;
 }
+
+struct parser_event * get_command_parser_event(struct parser * parser){
+    return get_parser_event(parser);
+}
+
 
 void command_parser_destroy(struct parser *parser) {
     if (parser != NULL)

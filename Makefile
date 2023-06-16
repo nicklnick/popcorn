@@ -1,7 +1,7 @@
 include Makefile.inc
 
 # Source files
-SRCS := $(wildcard $(SRC_DIR)/*.c)
+SRCS := $(shell find . -name "*.c")
 
 # Object files
 OBJS := $(patsubst $(SRC_DIR)/%.c,$(BIN_DIR)/%.o,$(SRCS))

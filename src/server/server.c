@@ -7,6 +7,7 @@
 #include <string.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <signal.h>
 
 #define MAX_CURRENT_CLIENTS 500
 
@@ -30,6 +31,7 @@ int main(int argc, char const *argv[]) {
     signal(SIGINT, sigterm_handler);
 
     init_server("../mail");
+
 
     int server_sock = get_server_socket();
     set_server_sock_handlers(&server_passive_accept, NULL);

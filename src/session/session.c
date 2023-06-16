@@ -2,7 +2,7 @@
 #include "../buffer/buffer.h"
 #include "../parser/command_parser.h"
 #include "../sm/sm.h"
-#include "wrapper-functions.h"
+#include "../server/wrapper-functions.h"
 #include <dirent.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -33,8 +33,7 @@ client_session *new_client_session(int client_socket) {
     memset(session->username, 0, BUFFER_SIZE);
     session->state_machine = new_state_machine();
     session->command_parser = command_parser_init();
-    session->event = _malloc(sizeof(struct parser_event));
-    session->event->type = MAY_VALID;
+    session->event = get_command_parser_event(session->command_parser);
     session->client_fd_handler = calloc(1, sizeof(fd_handler));
     session->client_fd_handler->handle_read = session_read;
     session->client_fd_handler->handle_write = session_send_response;
@@ -52,12 +51,7 @@ void session_read(struct selector_key *key) {
     session_ptr session = (session_ptr)key->data;
 
     if (session->event->type != MAY_VALID) {
-        parser_reset(session->command_parser);
-        // FIXME: Tidy up
-        session->event->arg1_len = 0;
-        session->event->arg2_len = 0;
-        session->event->cmd_len = 0;
-        session->event = calloc(1, sizeof(fd_handler));
+        command_parser_reset(session->command_parser);
     }
 
     if (session->event->type == MAY_VALID) {

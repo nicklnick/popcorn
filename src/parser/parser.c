@@ -76,3 +76,7 @@ const unsigned *
 parser_no_classes(void) {
     return classes;
 }
+
+struct parser_event * get_parser_event(struct parser * parser){
+    return &parser->event;
+}
