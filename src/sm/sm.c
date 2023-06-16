@@ -14,9 +14,11 @@ typedef int (*StateFunc)(state_machine *self, session_ptr session, char *buff,
                          int nbytes);
 
 int start(state_machine *self, session_ptr session, char *buff, int nbytes) {
-    printf("+OK READY\n");
-    printf("[AUTHORIZATION] ENTRY\n\n");
+    int len = 0;
+    len = strlen(GREETING);
+    strncpy(buff, GREETING, len);
     self->current_state = AUTHORIZATION;
+    return len;
 }
 
 int auth(state_machine *self, session_ptr session, char *buff, int nbytes) {
@@ -89,7 +91,7 @@ int dispatch(state_machine *self, session_ptr session, char *buff, int nbytes) {
 
 state_machine *new_state_machine() {
     state_machine *state_machine = malloc(sizeof(state_machine));
-    state_machine->current_state = AUTHORIZATION;
+    state_machine->current_state = START;
 
     return state_machine;
 }

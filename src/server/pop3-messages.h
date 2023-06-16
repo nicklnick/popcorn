@@ -1,6 +1,9 @@
 #ifndef POP3_MESSAGES_H
 #define POP3_MESSAGES_H
 
+//GREETING
+#define GREETING "+OK READY\r\n"
+
 // AUTHORIZATION
 #define USER           "USER"
 #define PASS           "PASS"

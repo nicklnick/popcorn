@@ -89,6 +89,9 @@ void session_send_response(struct selector_key *key) {
 
     session_ptr session = key->data;
 
+    if(get_current_state(session->state_machine) ==  START)
+        session->wbytes = session_process(session);
+
     if (session->wbytes == 0 && buffer_can_read(&session->rbuffer)) {
         session_read(key);
         return;

@@ -183,6 +183,7 @@ void close_server() {
     close(server->server_sock);
     free_clients();
     free_users_dir();
+    free(server->server_sock_handler);
     free(server);
     server = NULL;
 }

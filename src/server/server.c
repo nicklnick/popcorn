@@ -84,5 +84,5 @@ void server_passive_accept(struct selector_key *key) {
     session_ptr client_session = new_client_session(client_socket);
     add_client(client_session);
     selector_register(key->s, client_socket, get_fd_handler(client_session),
-                      OP_READ, client_session);
+                      OP_WRITE, client_session);
 }
