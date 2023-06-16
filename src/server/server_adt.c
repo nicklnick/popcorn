@@ -92,6 +92,8 @@ struct server *init_server(char *root_path) {
     server->clients_count = 0;
 
     server->server_sock_handler = malloc(sizeof(fd_handler));
+
+    return server;
 }
 
 int get_server_socket() {

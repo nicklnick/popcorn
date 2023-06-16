@@ -7,7 +7,7 @@ SRCS := $(shell find . -name "*.c")
 OBJS := $(patsubst $(SRC_DIR)/%.c,$(BIN_DIR)/%.o,$(SRCS))
 
 # Binary output
-TARGET := $(BIN_DIR)/main
+TARGET := $(BIN_DIR)/popcorn
 
 # Default target
 all: $(TARGET)

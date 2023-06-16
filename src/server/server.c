@@ -37,7 +37,7 @@ int main(int argc, char const *argv[]) {
     set_server_sock_handlers(&server_passive_accept, NULL);
     struct fd_handler *server_sock_handler = get_server_sock_fd_handler();
 
-    const struct selector_init conf = {
+    struct selector_init conf = {
         .signal = SIGALRM,
         .select_timeout =
             {

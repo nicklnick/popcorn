@@ -6,7 +6,6 @@ typedef struct client_session *session_ptr;
 #include "../parser/command_parser.h"
 #include "../selector/selector.h"
 #include "../sm/sm.h"
-#include "connection.h"
 #include <dirent.h>
 #include <stdbool.h>
 #include <sys/types.h>
