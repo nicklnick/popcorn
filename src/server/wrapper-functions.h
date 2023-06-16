@@ -27,6 +27,8 @@ int _accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen);
 
 void *_malloc(size_t size);
 
+void *_calloc(size_t nmemb, size_t size);
+
 pid_t _waitpid(pid_t pid, int *wstatus, int options);
 
 pid_t _fork(void);

@@ -27,7 +27,7 @@
 #define RSET     "RSET"
 #define QUIT     "QUIT"
 
-#define OK_STAT  "+OK STAT\r\n"
+#define OK_STAT  "+OK STAT" // we need to append nn mm, so no \r\n
 #define ERR_STAT "-ERR STAT\r\n"
 
 #define OK_LIST  "+OK LIST\r\n"
@@ -37,7 +37,8 @@
 #define ERR_RETR "-ERR RETR: No such message\r\n"
 
 #define OK_DELE  "+OK DELE: Message deleted\r\n"
-#define ERR_DELE "-ERR DELE: No such message\r\n"
+// FIXME: no such message OR messsage already deleted
+#define ERR_DELE "-ERR DELE: Maybe no such message\r\n"
 
 #define OK_NOOP  "+OK NOOP\r\n"
 

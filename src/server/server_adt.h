@@ -4,11 +4,12 @@
 #include "../selector/selector.h"
 #include "../session/session.h"
 #include "utils.h"
+#include <limits.h>
 
 typedef struct server *server_ptr;
 
 struct user_dir {
-    char username[256];
+    char username[NAME_MAX];
     char password[16];
     bool is_open;
 };

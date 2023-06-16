@@ -1,6 +1,7 @@
 #include "server_adt.h"
 #include "../selector/selector.h"
 #include "../session/session.h"
+#include "wrapper-functions.h"
 #include <dirent.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -58,7 +59,7 @@ static struct user_dir **init_users_dir(char *root_path, int *count) {
             memset(users_dir + users_count, 0,
                    ARRAY_INCREMENT * sizeof(struct user_dir *));
         }
-        users_dir[users_count] = calloc(1, sizeof(struct user_dir));
+        users_dir[users_count] = _calloc(1, sizeof(struct user_dir));
         strncpy(users_dir[users_count]->username, mail_dirent->d_name, 256);
         users_count++;
         mail_dirent = readdir(mail_dir);
@@ -73,7 +74,6 @@ static struct user_dir **init_users_dir(char *root_path, int *count) {
 }
 
 struct server *init_server(char *root_path) {
-
     if (server != NULL)
         return server;
 
@@ -100,7 +100,7 @@ int get_server_socket() {
     return server->server_sock;
 }
 
-struct user_dir *get_user_dir(char *username, int len) {
+struct user_dir * get_user_dir(char * username, int len){
 
     int i = 0;
     struct user_dir *user_dir;

@@ -83,6 +83,16 @@ void *_malloc(size_t size) {
     return result;
 }
 
+void *_calloc(size_t nmemb, size_t size) {
+    void *result;
+
+    if ((result = calloc(nmemb, size)) == NULL) {
+        perror("calloc()");
+        exit(EXIT_FAILURE);
+    }
+    return result;
+}
+
 pid_t _waitpid(pid_t pid, int *wstatus, int options) {
     pid_t result;
 
