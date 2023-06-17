@@ -60,6 +60,7 @@ client_session *new_client_session(int client_socket) {
     buffer_init(&session->wbuffer, BUFFER_SIZE,
                 (uint8_t *)session->wbuffer_data);
     session->client_dir = _calloc(1, sizeof(struct client_dir));
+    session->client_dir->pt_index = 1;
 
     return session;
 }

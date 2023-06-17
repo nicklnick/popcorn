@@ -22,10 +22,10 @@ struct dirent * readdir_files(DIR * dir, int file_pos){
     struct dirent * dirent = readdir(dir);
     int i = 0;
     while(i < file_pos && dirent != NULL){
-        dirent = readdir(dir);
         if (dirent->d_type == DT_REG){
             i++;
         }
+        dirent = readdir(dir);
     }
     return dirent;
 }

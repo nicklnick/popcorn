@@ -49,4 +49,6 @@
 #define OK_QUIT  "+OK QUIT\r\n"
 #define ERR_QUIT "-ERR QUIT\r\n"
 
+#define END_OF_MULTILINE ".\r\n"
+
 #endif // POP3_MESSAGES_H

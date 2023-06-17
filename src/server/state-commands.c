@@ -2,15 +2,16 @@
 #include "../server/pop3-limits.h"
 #include "../server/pop3-messages.h"
 #include "../server/server_adt.h"
-#include "../utils/staus-codes.h"
 #include "../utils/file-utils.h"
+#include "../utils/staus-codes.h"
 #include "wrapper-functions.h"
+#include <dirent.h>
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <dirent.h>
 
 int auth_user_command(session_ptr session, char *arg, int arg_len,
                       char *response_buff) {
@@ -178,13 +179,15 @@ int transaction_list_command(session_ptr session, char * arg, int arg_len, char 
     if(arg_len > 1){
         msg = strtol(arg,NULL, 10);
         rewinddir(client_dir);
-        client_dirent = readdir_files(client_dir,msg);
+        client_dirent = readdir_files(client_dir,msg-1);
+
+        if(client_dirent == NULL || msg == 0){
+            return sprintf(response_buff,"%s",ERR_LIST);
+        }
+
         strcat(mail_path, client_dirent->d_name);
-
         stat(mail_path,&f_stat);
-
-        sprintf(response_buff,OK_LIST_ARG,msg,f_stat.st_size);
-        return strlen(response_buff);
+        return sprintf(response_buff,OK_LIST_ARG,msg,f_stat.st_size);
     }
 
     int total_len = 0;
@@ -199,7 +202,7 @@ int transaction_list_command(session_ptr session, char * arg, int arg_len, char 
         strncpy(response_buff,aux_buf,total_len);
         response_buff[total_len] = '\0';
         rewinddir(client_dir);
-        set_client_dir_pt_index(session,0);
+        set_client_dir_pt_index(session,1);
     }
 
     int i = get_client_dir_pt_index(session);
@@ -236,6 +239,15 @@ int transaction_list_command(session_ptr session, char * arg, int arg_len, char 
         set_client_dir_pt_index(session,i);
         push_action_state(session,PROCESSING);
         return total_len;
+    }
+
+    current_line_len = sprintf(aux_buf,"%s",END_OF_MULTILINE);
+    if(total_len + current_line_len < buffsize){
+        strncat(response_buff,END_OF_MULTILINE,current_line_len);
+        total_len += current_line_len;
+    }
+    else{
+        push_action_state(session,PROCESSING);
     }
 
     return total_len;
