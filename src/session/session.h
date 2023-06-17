@@ -37,6 +37,8 @@ void set_client_dir_pt(session_ptr session, DIR *dir);
 
 DIR *get_client_dir_pt(session_ptr session);
 
+int *get_client_dir_mails(session_ptr session);
+
 fd_handler *get_fd_handler(session_ptr session);
 
 void init_client_dir_mails(session_ptr session);
