@@ -1,5 +1,6 @@
 #include "file-utils.h"
 #include <stdlib.h>
+#include <dirent.h>
 #include <string.h>
 
 int get_file_count(DIR *dir) {
@@ -18,14 +19,13 @@ int get_file_count(DIR *dir) {
 }
 
 struct dirent * readdir_files(DIR * dir, int file_pos){
-    struct dirent * dirent;
+    struct dirent * dirent = readdir(dir);
     int i = 0;
-    while(i <= file_pos){
+    while(i < file_pos && dirent != NULL){
         dirent = readdir(dir);
-        if ((strcmp(".", dirent->d_name) == 0) || (strcmp("..", dirent->d_name) == 0)){
-            continue ;
+        if (dirent->d_type == DT_REG){
+            i++;
         }
-        i++;
     }
     return dirent;
 }

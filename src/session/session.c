@@ -152,7 +152,6 @@ void set_client_dir_pt(session_ptr session, DIR *dir) {
 }
 
 DIR *get_client_dir_pt(session_ptr session) {
-    rewinddir(session->client_dir->dir_pt);
     return session->client_dir->dir_pt;
 }
 

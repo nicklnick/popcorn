@@ -19,6 +19,6 @@ int transaction_dele_command(session_ptr session, char *arg, int arg_len,
 int transaction_rset_command(session_ptr session, char *arg, int arg_len,
                              char *response_buff);
 
-int transaction_list_command(session_ptr session, char * arg, int arg_len, char * response_buff);
+int transaction_list_command(session_ptr session, char * arg, int arg_len, char * response_buff, int buffsize);
 
 #endif // STATE_COMMANDS_H

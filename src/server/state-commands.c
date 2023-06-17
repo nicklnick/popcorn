@@ -143,15 +143,11 @@ int transaction_rset_command(session_ptr session, char *arg, int arg_len,
     return SUCCESS;
 }
 
-int transaction_list_command(session_ptr session, char * arg, int arg_len, char * response_buff){
+int transaction_list_command(session_ptr session, char * arg, int arg_len, char * response_buff, int buffsize){
+
     DIR * client_dir = get_client_dir_pt(session);
-    long msg = -1;
-
-    if(arg != NULL){
-        msg = strtol(arg,NULL, 10);
-    }
-
-    struct dirent * client_dirent = readdir_files(client_dir,msg);
+    long msg;
+    struct dirent * client_dirent;
 
     char mail_path[MAILPATH_MAX] = {0};
     char username[NAME_MAX] = {0};
@@ -160,11 +156,60 @@ int transaction_list_command(session_ptr session, char * arg, int arg_len, char 
     strcat(mail_path, "/");
     strncat(mail_path, username, username_len);
     strcat(mail_path, "/");
-    strcat(mail_path, client_dirent->d_name);
+    int mail_path_base_len = strlen(mail_path);
 
     struct stat f_stat;
-    stat(mail_path,&f_stat);
 
-    sprintf(response_buff,OK_LIST_ARG,msg,f_stat.st_size);
-    return strlen(response_buff);
+    if(arg_len > 1){
+        msg = strtol(arg,NULL, 10);
+        rewinddir(client_dir);
+        client_dirent = readdir_files(client_dir,msg);
+        strcat(mail_path, client_dirent->d_name);
+
+        stat(mail_path,&f_stat);
+
+        sprintf(response_buff,OK_LIST_ARG,msg,f_stat.st_size);
+        return strlen(response_buff);
+    }
+
+    int total_len = 0;
+    int current_line_len = 0;
+    char aux_buf[RESPONSE_LEN] = {0};
+
+    total_len = current_line_len = sprintf(aux_buf,OK_LIST_NO_ARG,0,0);
+    strncpy(response_buff,aux_buf,current_line_len);
+    response_buff[current_line_len] = '\0';
+
+    int i = 0;
+    long last_dir = 0;
+
+    rewinddir(client_dir);
+    last_dir = telldir(client_dir);
+    client_dirent = readdir(client_dir);
+
+    while (total_len + current_line_len < buffsize && client_dirent != NULL){
+
+        if(client_dirent->d_type == DT_DIR){
+            client_dirent = readdir(client_dir);
+            continue ;
+        }
+
+        mail_path[mail_path_base_len] = '\0';
+        strcat(mail_path, client_dirent->d_name);
+        stat(mail_path,&f_stat);
+
+        current_line_len = sprintf(aux_buf,"%d %d\r\n", i++, f_stat.st_size);
+
+        if(current_line_len + total_len < buffsize){
+            strncat(response_buff,aux_buf,current_line_len);
+            total_len += current_line_len;
+        }
+
+        last_dir = telldir(client_dir);
+        client_dirent = readdir(client_dir);
+    }
+
+    seekdir(client_dir,last_dir);
+
+    return total_len;
 }
