@@ -94,6 +94,7 @@ buffer_compact(buffer *b) {
     } else if(b->read == b->write) {
         b->read  = b->data;
         b->write = b->data;
+        b->data[0] = '\0';
     } else {
         const size_t n = b->write - b->read;
         memmove(b->data, b->read, n);

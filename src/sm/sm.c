@@ -16,6 +16,9 @@ typedef int (*StateFunc)(state_machine *self, session_ptr session, char *buff,
                          int nbytes);
 
 int start(state_machine *self, session_ptr session, char *buff, int nbytes) {
+
+    pop_action_state(session);
+
     int len = 0;
     len = strlen(GREETING);
     strncpy(buff, GREETING, len);
@@ -40,6 +43,7 @@ int auth(state_machine *self, session_ptr session, char *buff, int nbytes) {
             self->current_state = TRANSACTION;
         }
     } else {
+        pop_action_state(session);
         len = strlen(ERR_COMMAND);
         strncpy(buff, ERR_COMMAND, len);
     }
@@ -55,6 +59,7 @@ int transaction(state_machine *self, session_ptr session, char *buff,
 
     char response[RESPONSE_LEN] = {0};
     if (strcmp(event->command, QUIT) == 0) {
+        pop_action_state(session);
         len = strlen(OK_QUIT);
         strncpy(buff, OK_QUIT, len);
         self->current_state = END;
@@ -84,6 +89,7 @@ int transaction(state_machine *self, session_ptr session, char *buff,
         len = strlen(OK_DELE);
         strncpy(buff, OK_DELE, len);
     } else if (strncmp(event->command, NOOP, nbytes) == 0) {
+        pop_action_state(session);
         len = strlen(OK_NOOP);
         strncpy(buff, OK_NOOP, len);
     } else if (strncmp(event->command, RSET, nbytes) == 0) {
@@ -92,6 +98,7 @@ int transaction(state_machine *self, session_ptr session, char *buff,
         len = strlen(OK_RSET);
         strncpy(buff, OK_RSET, len);
     } else {
+        pop_action_state(session);
         len = strlen(ERR_COMMAND);
         strncpy(buff, ERR_COMMAND, len);
         self->current_state = TRANSACTION;

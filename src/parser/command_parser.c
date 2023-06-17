@@ -122,6 +122,9 @@ void command_parser_reset(struct parser *parser) {
     event->arg1_len = 0;
     event->arg2_len = 0;
     event->cmd_len = 0;
+    memset(event->command,'\0',COMMAND_SIZE);
+    memset(event->argument1,'\0',ARGUMENT_SIZE);
+    memset(event->argument2,'\0',ARGUMENT_SIZE);
 }
 
 struct parser_event *get_command(struct parser_event *event,

@@ -30,6 +30,13 @@ int push(stack_adt stack, stack_data_t data){
     return 0;
 }
 
+int peek(stack_adt stack, stack_data_t * data){
+    if(stack->top == NULL)
+        return -1;
+    *data = stack->top->data;
+    return 0;
+}
+
 int pop(stack_adt stack, stack_data_t * data){
     node * top = stack->top;
     if(top == NULL)
@@ -38,4 +45,16 @@ int pop(stack_adt stack, stack_data_t * data){
     stack->top = top->next;
     *data = top->data;
     return 0;
+}
+
+void free_stack_adt(stack_adt stack){
+    node * current = stack->top;
+
+    while(current != NULL){
+        node * next = current->next;
+        free(current);
+        current = next;
+    }
+
+    free(stack);
 }

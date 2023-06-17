@@ -15,6 +15,8 @@
 int auth_user_command(session_ptr session, char *arg, int arg_len,
                       char *response_buff) {
 
+    pop_action_state(session);
+
     struct user_dir *user_dir = get_user_dir(arg, arg_len);
 
     // User does not exist
@@ -32,6 +34,9 @@ int auth_user_command(session_ptr session, char *arg, int arg_len,
 }
 
 int auth_pass_command(session_ptr session, char *arg, int arg_len, char *response_buff, bool * change_status) {
+
+    pop_action_state(session);
+
     char username[NAME_MAX] = {0};
     int username_len = get_username(session, username);
     if (username_len <= 0) {
@@ -92,6 +97,8 @@ static ssize_t get_file_size(const char *mail_dir, const char *filename) {
 
 int transaction_stat_command(session_ptr session, char *arg, int arg_len,
                              char *response_buff) {
+    pop_action_state(session);
+
     DIR *client_dir = get_client_dir_pt(session);
 
     if (!client_dir) {
@@ -128,6 +135,8 @@ int transaction_stat_command(session_ptr session, char *arg, int arg_len,
 int transaction_dele_command(session_ptr session, char *arg, int arg_len,
                              char *response_buff) {
 
+    pop_action_state(session);
+
     int status = mark_to_delete(session, atoi(arg));
     if (status == ERROR) {
         strcpy(response_buff, ERR_DELE);
@@ -139,11 +148,16 @@ int transaction_dele_command(session_ptr session, char *arg, int arg_len,
 
 int transaction_rset_command(session_ptr session, char *arg, int arg_len,
                              char *response_buff) {
+
+    pop_action_state(session);
+
     unmark_mails(session);
     return SUCCESS;
 }
 
 int transaction_list_command(session_ptr session, char * arg, int arg_len, char * response_buff, int buffsize){
+
+    action_state current = pop_action_state(session);
 
     DIR * client_dir = get_client_dir_pt(session);
     long msg;
@@ -160,6 +174,7 @@ int transaction_list_command(session_ptr session, char * arg, int arg_len, char 
 
     struct stat f_stat;
 
+    //arg_len has number + '\0'
     if(arg_len > 1){
         msg = strtol(arg,NULL, 10);
         rewinddir(client_dir);
@@ -175,15 +190,20 @@ int transaction_list_command(session_ptr session, char * arg, int arg_len, char 
     int total_len = 0;
     int current_line_len = 0;
     char aux_buf[RESPONSE_LEN] = {0};
-
-    total_len = current_line_len = sprintf(aux_buf,OK_LIST_NO_ARG,0,0);
-    strncpy(response_buff,aux_buf,current_line_len);
-    response_buff[current_line_len] = '\0';
-
-    int i = 0;
     long last_dir = 0;
 
-    rewinddir(client_dir);
+
+
+    if(current == PROCESS){
+        total_len  = sprintf(aux_buf,OK_LIST_NO_ARG,0,0);
+        strncpy(response_buff,aux_buf,total_len);
+        response_buff[total_len] = '\0';
+        rewinddir(client_dir);
+        set_client_dir_pt_index(session,0);
+    }
+
+    int i = get_client_dir_pt_index(session);
+
     last_dir = telldir(client_dir);
     client_dirent = readdir(client_dir);
 
@@ -198,18 +218,25 @@ int transaction_list_command(session_ptr session, char * arg, int arg_len, char 
         strcat(mail_path, client_dirent->d_name);
         stat(mail_path,&f_stat);
 
-        current_line_len = sprintf(aux_buf,"%d %d\r\n", i++, f_stat.st_size);
+        current_line_len = sprintf(aux_buf,"%d %d\r\n", i, f_stat.st_size);
 
         if(current_line_len + total_len < buffsize){
             strncat(response_buff,aux_buf,current_line_len);
             total_len += current_line_len;
+            i++;
         }
 
         last_dir = telldir(client_dir);
         client_dirent = readdir(client_dir);
     }
 
-    seekdir(client_dir,last_dir);
+    if(client_dirent != NULL){
+        seekdir(client_dir,last_dir);
+        set_client_dir_pt(session, client_dir);
+        set_client_dir_pt_index(session,i);
+        push_action_state(session,PROCESSING);
+        return total_len;
+    }
 
     return total_len;
 }

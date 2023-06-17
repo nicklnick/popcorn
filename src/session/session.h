@@ -10,6 +10,8 @@ typedef struct client_session *session_ptr;
 #include <stdbool.h>
 #include <sys/types.h>
 
+typedef enum {READ = 0, READING, PROCESS, PROCESSING, WRITE, WRITING} action_state;
+
 session_ptr new_client_session(int client_socket);
 
 void close_client_session(session_ptr session);
@@ -37,9 +39,19 @@ void set_client_dir_pt(session_ptr session, DIR *dir);
 
 DIR *get_client_dir_pt(session_ptr session);
 
+int get_client_dir_pt_index(session_ptr session);
+
+void set_client_dir_pt_index(session_ptr session, int index);
+
 fd_handler *get_fd_handler(session_ptr session);
 
 void init_client_dir_mails(session_ptr session);
+
+action_state pop_action_state(session_ptr session);
+
+action_state peek_action_state(session_ptr session);
+
+void push_action_state(session_ptr session, action_state action);
 
 /**
  * @param session
