@@ -7,10 +7,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <stdbool.h>
 
 #define PORT            1110
 
 #define ARRAY_INCREMENT 2
+
+#define OPTIONS_COUNT 1
 
 typedef struct client_node {
     session_ptr client;
@@ -32,6 +35,55 @@ struct server {
 };
 
 struct server *server = NULL;
+
+// Used to check if all passwords are provided
+static int registered_users_count = 0;
+
+typedef int(*option_handler)(int argc, char *argv[]);
+
+typedef struct option_t{
+    char * option;
+    option_handler handler;
+} option_t;
+
+int handle_user_option(int argc, char *argv[]){
+    if (argc == 0){
+        fprintf(stderr, "FATAL_ERROR: Format for -u is <user>:<pass>\n");
+        return -1;
+    }
+    const char * delimiter = ":";
+    char * username = strtok(argv[0], delimiter);
+    if (username == NULL){
+        fprintf(stderr, "FATAL_ERROR: Format for -u is <user>:<pass>\n");
+        return -1;
+    }
+    int user_index = -1;
+    for (int i=0; i < server->users_count; i++){
+        if (strcmp(server->users_dir[i]->username, username) == 0){
+            user_index = i;
+        }
+    }
+    if (user_index == -1){
+        fprintf(stderr, "FATAL_ERROR: No dir matches username \"%s\"\n", username);
+        return -1;
+    }
+    char * password = strtok(NULL, delimiter);
+    if (password == NULL){
+        fprintf(stderr, "FATAL_ERROR: No password provided for username \"%s\"\n", username);
+        return -1;
+    }
+    if (strlen(password) >= 16){
+        fprintf(stderr, "FATAL_ERROR: Password for username \"%s\" is too long (16 characters max)\n", username);
+        return -1;
+    }
+    strcpy(server->users_dir[user_index]->password, password);
+    registered_users_count++;
+    return 1;
+}
+
+option_t options[OPTIONS_COUNT] = {
+    {.option = "-u", .handler = handle_user_option},
+};
 
 static struct user_dir **init_users_dir(char *root_path, int *count) {
     DIR *mail_dir = opendir(root_path);
@@ -73,7 +125,7 @@ static struct user_dir **init_users_dir(char *root_path, int *count) {
     return users_dir;
 }
 
-struct server *init_server(char *root_path) {
+struct server *init_server(char *root_path, int argc, char *argv[]) {
     if (server != NULL)
         return server;
 
@@ -87,6 +139,30 @@ struct server *init_server(char *root_path) {
     server->server_sock = server_sock;
     server->root_path = root_path;
     server->users_dir = init_users_dir(root_path, &server->users_count);
+
+    argv++;
+    argc--;
+    while (argc > 0){
+        bool found_option = false;
+        for (int i=0; i < OPTIONS_COUNT && !found_option; i++){
+            if ( strcmp(argv[0], options[i].option) == 0 ){
+                found_option = true;
+                argv++;
+                argc--;
+                options[i].handler(argc, argv);
+            }
+        }
+        if (!found_option){
+            fprintf(stderr, "FATAL_ERROR: Invalid command \"%s\" \n", argv[0]);
+            break;
+        }
+        argv++;
+        argc--;
+    }
+
+    if (registered_users_count < server->users_count){
+        fprintf(stderr, "FATAL_ERROR: Missing passwords for user directories\n");
+    }
 
     server->clients = NULL;
     server->clients_count = 0;

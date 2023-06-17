@@ -38,11 +38,13 @@ int auth_pass_command(session_ptr session, char *arg, int arg_len, char *respons
 
     pop_action_state(session);
 
+
+    //TODO: check this
     char username[NAME_MAX] = {0};
     int username_len = get_username(session, username);
     if (username_len <= 0) {
         int len = strlen(ERR_PASS_VALID);
-        strncpy(response_buff,ERR_PASS_VALID,len);
+        strncpy(response_buff, ERR_PASS_VALID, len);
         *change_status = false;
         return len;
     }
@@ -51,14 +53,16 @@ int auth_pass_command(session_ptr session, char *arg, int arg_len, char *respons
 
     if (user_dir->is_open) {
         int len = strlen(ERR_PASS_LOCK);
-        strncpy(response_buff,ERR_PASS_LOCK,len);
+        strncpy(response_buff, ERR_PASS_LOCK, len);
         *change_status = false;
         return len;
     }
 
-    // BUSCAR CONTRASEÑA DE USER
-    //  COMPARAR CONTRA ARG
-    //  NO: ERROR
+    if (strcmp(user_dir->password, arg) != 0){
+        int len = strlen(ERR_PASS_VALID);
+        strncpy(response_buff, ERR_PASS_VALID, len);
+        return len;
+    }
 
     char mail_dir[MAILPATH_MAX] = {0};
     strcpy(mail_dir, get_mail_dir_path());
@@ -66,15 +70,14 @@ int auth_pass_command(session_ptr session, char *arg, int arg_len, char *respons
     strncat(mail_dir, username, username_len);
 
     DIR *client_dir = opendir(mail_dir);
-    if(client_dir == NULL)
+    if (client_dir == NULL)
         perror("auth_pass_command()");
     set_client_dir_pt(session, client_dir);
 
     int len = strlen(OK_PASS);
-    strncpy(response_buff,OK_PASS,len);
+    strncpy(response_buff, OK_PASS, len);
     *change_status = true;
     return len;
-
 }
 
 static ssize_t get_file_size(const char *mail_dir, const char *filename) {
@@ -133,6 +136,19 @@ int transaction_stat_command(session_ptr session, char *arg, int arg_len,
     strncat(mail_dir, username, username_len);
 
     int file_count = 0, size_bytes = 0;
+    struct dirent *entry;
+    int *client_mails = get_client_dir_mails(session);
+    int i = 0;
+    while ((entry = readdir(client_dir)) != NULL) {
+        if (entry->d_type == DT_REG) {
+            if (!client_mails[i]) {
+                file_count++;
+                size_bytes += get_file_size(mail_dir, entry->d_name);
+            }
+
+            i++;
+        }
+    }
     get_file_stats(client_dir,&file_count,&size_bytes,mail_dir);
 
     sprintf(response_buff, "%d %d", file_count, size_bytes);

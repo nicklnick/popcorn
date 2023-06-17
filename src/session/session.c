@@ -221,8 +221,12 @@ int mark_to_delete(session_ptr session, int mail_num) {
 
 void unmark_mails(session_ptr session) {
     memset(session->client_dir->mails, 0,
-           sizeof(session->client_dir->mails) *
+           sizeof(session->client_dir->mails[0]) *
                session->client_dir->total_mails);
+}
+
+int *get_client_dir_mails(session_ptr session) {
+    return session->client_dir->mails;
 }
 
 fd_handler *get_fd_handler(session_ptr session) {
