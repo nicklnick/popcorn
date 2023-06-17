@@ -79,12 +79,14 @@ int auth_pass_command(session_ptr session, char *arg, int arg_len, char *respons
 
 static ssize_t get_file_size(const char *mail_dir, const char *filename) {
     struct stat st;
+    int mail_len = strlen(mail_dir);
+    int file_len = strlen(filename);
     char *file_path =
-        _malloc((strlen(mail_dir) + strlen(filename) + 1) * sizeof(char));
+        (char *)_calloc(mail_len + 1 + file_len + 1, sizeof(char));
 
-    strcpy(file_path, mail_dir);
-    strcat(file_path, "/");
-    strncat(file_path, filename, strlen(filename));
+    strncpy(file_path, mail_dir, mail_len);
+    strcat(file_path, "/"); // 1
+    strncat(file_path, filename, file_len + 1);
     if (stat(file_path, &st) < 0) {
         free(file_path);
 
@@ -94,6 +96,17 @@ static ssize_t get_file_size(const char *mail_dir, const char *filename) {
     free(file_path);
 
     return st.st_size;
+}
+
+
+static void get_file_stats(DIR * dir, int * count, int * total_bytes, char * base_path){
+    struct dirent *entry;
+    while ((entry = readdir(dir)) != NULL) {
+        if (entry->d_type == DT_REG) {
+            *count+=1;
+            *total_bytes += get_file_size(base_path, entry->d_name);
+        }
+    }
 }
 
 int transaction_stat_command(session_ptr session, char *arg, int arg_len,
@@ -120,13 +133,7 @@ int transaction_stat_command(session_ptr session, char *arg, int arg_len,
     strncat(mail_dir, username, username_len);
 
     int file_count = 0, size_bytes = 0;
-    struct dirent *entry;
-    while ((entry = readdir(client_dir)) != NULL) {
-        if (entry->d_type == DT_REG) {
-            file_count++;
-            size_bytes += get_file_size(mail_dir, entry->d_name);
-        }
-    }
+    get_file_stats(client_dir,&file_count,&size_bytes,mail_dir);
 
     sprintf(response_buff, "%d %d", file_count, size_bytes);
 
@@ -198,10 +205,15 @@ int transaction_list_command(session_ptr session, char * arg, int arg_len, char 
 
 
     if(current == PROCESS){
-        total_len  = sprintf(aux_buf,OK_LIST_NO_ARG,0,0);
+        rewinddir(client_dir);
+        int count,total = 0;
+        get_file_stats(client_dir,&count,&total,mail_path);
+        total_len  = sprintf(aux_buf,OK_LIST_NO_ARG,count,total);
+
         strncpy(response_buff,aux_buf,total_len);
         response_buff[total_len] = '\0';
         rewinddir(client_dir);
+
         set_client_dir_pt_index(session,1);
     }
 

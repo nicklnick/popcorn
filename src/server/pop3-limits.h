@@ -3,7 +3,7 @@
 
 #include <limits.h>
 
-#define RESPONSE_LEN 40 // RFC 1939 - Section 3
+#define RESPONSE_LEN 45 // RFC 1939 - Section 3
 
 #define MAILPATH_MAX (PATH_MAX - 2 * NAME_MAX) // path/username/filename
 
