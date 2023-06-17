@@ -23,15 +23,15 @@ static fd_selector server_init_selector(int server_sock,
                                         struct selector_init *conf);
 void server_passive_accept(struct selector_key *key);
 
-int main(int argc, char const *argv[]) {
+int main(int argc, char *argv[]) {
+
     close(STDIN_FILENO);
     close(STDOUT_FILENO);
 
     signal(SIGTERM, sigterm_handler);
     signal(SIGINT, sigterm_handler);
 
-    init_server("../mail");
-
+    init_server("../mail", argc, argv);
 
     int server_sock = get_server_socket();
     set_server_sock_handlers(&server_passive_accept, NULL);

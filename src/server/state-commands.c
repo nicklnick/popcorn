@@ -31,6 +31,8 @@ int auth_user_command(session_ptr session, char *arg, int arg_len,
 }
 
 int auth_pass_command(session_ptr session, char *arg, int arg_len, char *response_buff, bool * change_status) {
+
+    //TODO: check this
     char username[NAME_MAX] = {0};
     int username_len = get_username(session, username);
     if (username_len <= 0) {
@@ -49,9 +51,11 @@ int auth_pass_command(session_ptr session, char *arg, int arg_len, char *respons
         return len;
     }
 
-    // BUSCAR CONTRASEÑA DE USER
-    //  COMPARAR CONTRA ARG
-    //  NO: ERROR
+    if (strcmp(user_dir->password, arg) != 0){
+        int len = strlen(ERR_PASS_VALID);
+        strncpy(response_buff, ERR_PASS_VALID, len);
+        return len;
+    }
 
     char mail_dir[MAILPATH_MAX] = {0};
     strcpy(mail_dir, get_mail_dir_path());
