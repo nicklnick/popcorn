@@ -2,12 +2,12 @@
 #include "server_adt.h"
 #include "utils.h"
 #include "wrapper-functions.h"
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include <signal.h>
 
 #define MAX_CURRENT_CLIENTS 500
 
@@ -30,10 +30,9 @@ int main(int argc, char const *argv[]) {
     signal(SIGTERM, sigterm_handler);
     signal(SIGINT, sigterm_handler);
 
-    //obtener path mail, obtener char ** pass
+    // obtener path mail, obtener char ** pass
 
-    init_server("../mail");
-
+    init_server("mail/");
 
     int server_sock = get_server_socket();
     set_server_sock_handlers(&server_passive_accept, NULL);
@@ -94,4 +93,3 @@ void server_passive_accept(struct selector_key *key) {
 // key->data
 // key->fd: socket_server
 // key->s : selector
-

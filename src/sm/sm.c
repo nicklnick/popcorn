@@ -103,6 +103,8 @@ int transaction(state_machine *self, session_ptr session, char *buff,
 int end(state_machine *self, session_ptr session, char *buff, int nbytes) {
     printf("[END] +OK\n");
     self->current_state = END;
+
+    return SUCCESS;
 }
 
 StateFunc func_table[4] = {

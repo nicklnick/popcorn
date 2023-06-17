@@ -1,9 +1,8 @@
 #include "session.h"
 #include "../buffer/buffer.h"
 #include "../parser/command_parser.h"
-#include "../sm/sm.h"
 #include "../server/wrapper-functions.h"
-#include <dirent.h>
+#include "../sm/sm.h"
 #include "../utils/file-utils.h"
 #include "../utils/general-utils.h"
 #include "../utils/staus-codes.h"
@@ -102,7 +101,7 @@ void session_send_response(struct selector_key *key) {
 
     session_ptr session = key->data;
 
-    if(get_current_state(session->state_machine) ==  START)
+    if (get_current_state(session->state_machine) == START)
         session->wbytes = session_process(session);
 
     if (session->wbytes == 0 && buffer_can_read(&session->rbuffer)) {
@@ -178,10 +177,13 @@ int mark_to_delete(session_ptr session, int mail_num) {
 
 void unmark_mails(session_ptr session) {
     memset(session->client_dir->mails, 0,
-           sizeof(session->client_dir->mails) *
+           sizeof(session->client_dir->mails[0]) *
                session->client_dir->total_mails);
 }
 
+int *get_client_dir_mails(session_ptr session) {
+    return session->client_dir->mails;
+}
 
 fd_handler *get_fd_handler(session_ptr session) {
     return session->client_fd_handler;

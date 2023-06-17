@@ -2,15 +2,15 @@
 #include "../server/pop3-limits.h"
 #include "../server/pop3-messages.h"
 #include "../server/server_adt.h"
-#include "../utils/staus-codes.h"
 #include "../utils/file-utils.h"
+#include "../utils/staus-codes.h"
 #include "wrapper-functions.h"
+#include <dirent.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <dirent.h>
 
 int auth_user_command(session_ptr session, char *arg, int arg_len,
                       char *response_buff) {
@@ -31,12 +31,13 @@ int auth_user_command(session_ptr session, char *arg, int arg_len,
     return len;
 }
 
-int auth_pass_command(session_ptr session, char *arg, int arg_len, char *response_buff, bool * change_status) {
+int auth_pass_command(session_ptr session, char *arg, int arg_len,
+                      char *response_buff, bool *change_status) {
     char username[NAME_MAX] = {0};
     int username_len = get_username(session, username);
     if (username_len <= 0) {
         int len = strlen(ERR_PASS_VALID);
-        strncpy(response_buff,ERR_PASS_VALID,len);
+        strncpy(response_buff, ERR_PASS_VALID, len);
         *change_status = false;
         return len;
     }
@@ -45,7 +46,7 @@ int auth_pass_command(session_ptr session, char *arg, int arg_len, char *respons
 
     if (user_dir->is_open) {
         int len = strlen(ERR_PASS_LOCK);
-        strncpy(response_buff,ERR_PASS_LOCK,len);
+        strncpy(response_buff, ERR_PASS_LOCK, len);
         *change_status = false;
         return len;
     }
@@ -60,25 +61,26 @@ int auth_pass_command(session_ptr session, char *arg, int arg_len, char *respons
     strncat(mail_dir, username, username_len);
 
     DIR *client_dir = opendir(mail_dir);
-    if(client_dir == NULL)
+    if (client_dir == NULL)
         perror("auth_pass_command()");
     set_client_dir_pt(session, client_dir);
 
     int len = strlen(OK_PASS);
-    strncpy(response_buff,OK_PASS,len);
+    strncpy(response_buff, OK_PASS, len);
     *change_status = true;
     return len;
-
 }
 
 static ssize_t get_file_size(const char *mail_dir, const char *filename) {
     struct stat st;
+    int mail_len = strlen(mail_dir);
+    int file_len = strlen(filename);
     char *file_path =
-        _malloc((strlen(mail_dir) + strlen(filename) + 1) * sizeof(char));
+        (char *)_calloc(mail_len + 1 + file_len + 1, sizeof(char));
 
-    strcpy(file_path, mail_dir);
-    strcat(file_path, "/");
-    strncat(file_path, filename, strlen(filename));
+    strncpy(file_path, mail_dir, mail_len);
+    strcat(file_path, "/"); // 1
+    strncat(file_path, filename, file_len + 1);
     if (stat(file_path, &st) < 0) {
         free(file_path);
 
@@ -113,10 +115,16 @@ int transaction_stat_command(session_ptr session, char *arg, int arg_len,
 
     int file_count = 0, size_bytes = 0;
     struct dirent *entry;
+    int *client_mails = get_client_dir_mails(session);
+    int i = 0;
     while ((entry = readdir(client_dir)) != NULL) {
         if (entry->d_type == DT_REG) {
-            file_count++;
-            size_bytes += get_file_size(mail_dir, entry->d_name);
+            if (!client_mails[i]) {
+                file_count++;
+                size_bytes += get_file_size(mail_dir, entry->d_name);
+            }
+
+            i++;
         }
     }
 
@@ -143,15 +151,16 @@ int transaction_rset_command(session_ptr session, char *arg, int arg_len,
     return SUCCESS;
 }
 
-int transaction_list_command(session_ptr session, char * arg, int arg_len, char * response_buff){
-    DIR * client_dir = get_client_dir_pt(session);
+int transaction_list_command(session_ptr session, char *arg, int arg_len,
+                             char *response_buff) {
+    DIR *client_dir = get_client_dir_pt(session);
     long msg = -1;
 
-    if(arg != NULL){
-        msg = strtol(arg,NULL, 10);
+    if (arg != NULL) {
+        msg = strtol(arg, NULL, 10);
     }
 
-    struct dirent * client_dirent = readdir_files(client_dir,msg);
+    struct dirent *client_dirent = readdir_files(client_dir, msg);
 
     char mail_path[MAILPATH_MAX] = {0};
     char username[NAME_MAX] = {0};
@@ -163,8 +172,8 @@ int transaction_list_command(session_ptr session, char * arg, int arg_len, char 
     strcat(mail_path, client_dirent->d_name);
 
     struct stat f_stat;
-    stat(mail_path,&f_stat);
+    stat(mail_path, &f_stat);
 
-    sprintf(response_buff,OK_LIST_ARG,msg,f_stat.st_size);
+    sprintf(response_buff, OK_LIST_ARG, msg, f_stat.st_size);
     return strlen(response_buff);
 }
