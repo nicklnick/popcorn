@@ -201,7 +201,7 @@ int transaction_list_command(session_ptr session, char * arg, int arg_len, char 
     if(arg_len > 1){
         msg = strtol(arg,NULL, 10);
         rewinddir(client_dir);
-        client_dirent = readdir_files(client_dir,msg-1);
+        client_dirent = readdir_files(client_dir,msg);
 
         if(client_dirent == NULL || msg == 0){
             return sprintf(response_buff,"%s",ERR_LIST);
@@ -215,9 +215,7 @@ int transaction_list_command(session_ptr session, char * arg, int arg_len, char 
     int total_len = 0;
     int current_line_len = 0;
     char aux_buf[RESPONSE_LEN] = {0};
-    long last_dir = 0;
-
-
+    long last_dir;
 
     if(current == PROCESS){
         rewinddir(client_dir);
@@ -233,11 +231,11 @@ int transaction_list_command(session_ptr session, char * arg, int arg_len, char 
     }
 
     int i = get_client_dir_pt_index(session);
-
     last_dir = telldir(client_dir);
     client_dirent = readdir(client_dir);
 
-    while (total_len + current_line_len < buffsize && client_dirent != NULL){
+    while (total_len + current_line_len < buffsize && (client_dirent != NULL)){
+
 
         if(client_dirent->d_type == DT_DIR){
             client_dirent = readdir(client_dir);
@@ -253,11 +251,11 @@ int transaction_list_command(session_ptr session, char * arg, int arg_len, char 
         if(current_line_len + total_len < buffsize){
             strncat(response_buff,aux_buf,current_line_len);
             total_len += current_line_len;
+            last_dir = telldir(client_dir);
+            client_dirent = readdir(client_dir);
             i++;
         }
 
-        last_dir = telldir(client_dir);
-        client_dirent = readdir(client_dir);
     }
 
     if(client_dirent != NULL){
