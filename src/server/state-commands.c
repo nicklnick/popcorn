@@ -116,13 +116,6 @@ int transaction_stat_command(session_ptr session, char *arg, int arg_len,
                              char *response_buff) {
     pop_action_state(session);
 
-    DIR *client_dir = get_client_dir_pt(session);
-
-    if (!client_dir) {
-        perror("Error opening directory");
-        exit(EXIT_FAILURE);
-    }
-
     // get mail_dir
     char username[NAME_MAX] = {0};
     int username_len = get_username(session, username);
@@ -134,6 +127,12 @@ int transaction_stat_command(session_ptr session, char *arg, int arg_len,
     strcpy(mail_dir, get_mail_dir_path());
     strcat(mail_dir, "/");
     strncat(mail_dir, username, username_len);
+
+    DIR* client_dir = opendir(mail_dir);
+    if(!client_dir) {
+        printf("error opening client directory");
+        exit(EXIT_FAILURE);
+    }
 
     int file_count = 0, size_bytes = 0;
     struct dirent *entry;
