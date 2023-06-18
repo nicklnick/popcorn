@@ -64,6 +64,9 @@ int auth_pass_command(session_ptr session, char *arg, int arg_len, char *respons
         return len;
     }
 
+    struct user_dir * user_d= get_user_dir(username,username_len);
+    user_d->is_open = true;
+
     char mail_dir[MAILPATH_MAX] = {0};
     strcpy(mail_dir, get_mail_dir_path());
     strcat(mail_dir, "/");

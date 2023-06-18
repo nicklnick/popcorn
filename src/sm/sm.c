@@ -42,7 +42,12 @@ int auth(state_machine *self, session_ptr session, char *buff, int nbytes) {
             init_client_dir_mails(session);
             self->current_state = TRANSACTION;
         }
-    } else {
+    } else if (strncmp(event->command,QUIT,nbytes) == 0){
+        len = strlen(OK_QUIT);
+        strncpy(buff, OK_QUIT, len);
+        self->current_state = END;
+    }
+    else {
         pop_action_state(session);
         len = strlen(ERR_COMMAND);
         strncpy(buff, ERR_COMMAND, len);
