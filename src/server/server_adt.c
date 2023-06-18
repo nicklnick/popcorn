@@ -11,7 +11,16 @@
 
 #define PORT            1110
 
-#define ARRAY_INCREMENT 2                                                                \
+#define ARRAY_INCREMENT 2        
+
+#define handle_exit(format, ...)                                          \
+	{                                                                     \
+        fprintf(stderr, "popcorn: ");                                     \
+		fprintf(stderr, format, __VA_ARGS__);                             \
+		fprintf(stderr, "\n");                                            \
+        close_server();                                                   \
+		exit(1);                                                          \
+	}             
 
 typedef struct client_node {
     session_ptr client;
@@ -36,16 +45,12 @@ struct server *server = NULL;
 
 static void register_user_pass(int argc, char *argv[]){
     if (argc == 0){
-        fprintf(stderr, "FATAL_ERROR: Format is -u <user>:<password>\n");
-        close_server();
-        exit(1);
+        handle_exit("Format is %s user:password", "-u")
     }
     const char * delimiter = ":";
     char * username = strtok(argv[0], delimiter);
     if (username == NULL){
-        fprintf(stderr, "FATAL_ERROR: Format is -u <user>:<password>\n");
-        close_server();
-        exit(1);
+        handle_exit("Format is %s user:password", "-u")
     }
     int user_index = -1;
     for (int i=0; i < server->users_count; i++){
@@ -54,30 +59,26 @@ static void register_user_pass(int argc, char *argv[]){
         }
     }
     if (user_index == -1){
-        fprintf(stderr, "FATAL_ERROR: No dir matches username \"%s\"\n", username);
-        close_server();
-        exit(1);
+        handle_exit("No directory matches username \"%s\"", username)
     }
     char * password = strtok(NULL, delimiter);
     if (password == NULL){
-        fprintf(stderr, "FATAL_ERROR: No password provided for username \"%s\"\n", username);
-        close_server();
-        exit(1);
+        handle_exit("No password provided for username \"%s\"", username)
     }
     if (strlen(password) >= 16){
-        fprintf(stderr, "FATAL_ERROR: Password for username \"%s\" is too long (16 characters max)\n", username);
-        close_server();
-        exit(1);
+        handle_exit("Password for username \"%s\" is too long (16 characters max)", username)
     }
     strcpy(server->users_dir[user_index]->password, password);
 }
 
-static struct user_dir **init_users_dir(char *root_path, int *count) {
+static void init_users_dir(char *root_path) {
     DIR *mail_dir = opendir(root_path);
     if (mail_dir == NULL) {
         perror("opendir()");
         exit(1);
     }
+
+    server->root_path = root_path;
 
     int users_count = 0;
     struct user_dir **users_dir;
@@ -108,13 +109,19 @@ static struct user_dir **init_users_dir(char *root_path, int *count) {
 
     closedir(mail_dir);
 
-    *count = users_count;
-    return users_dir;
+    server->users_count = users_count;
+    server->users_dir = users_dir;
 }
 
-struct server *init_server(char *root_path, int argc, char *argv[]) {
+struct server *init_server(int argc, char *argv[]) {
     if (server != NULL)
         return server;
+
+    if (argc <= 1){
+        fprintf(stderr, "popcorn: Missing mail directory and users\n");
+        fprintf(stderr, "Usage: ./popcorn -d mail_path -u user:password [-u user:password]...\n");
+        exit(1);
+    }
 
     int server_sock = setupServerSocket(PORT);
     if (server_sock < 0) {
@@ -122,9 +129,8 @@ struct server *init_server(char *root_path, int argc, char *argv[]) {
         return NULL;
     }
 
-    server = malloc(sizeof(struct server));
+    server = calloc(1, sizeof(struct server));
     server->server_sock = server_sock;
-    server->root_path = root_path;
 
     server->clients = NULL;
     server->clients_count = 0;
@@ -141,24 +147,18 @@ struct server *init_server(char *root_path, int argc, char *argv[]) {
                 argc--;
                 argv++;
                 if (argc == 0){
-                    fprintf(stderr, "FATAL_ERROR: Format is -d <root_path>\n");
-                    close_server();
-                    exit(1);
+                    handle_exit("%s: Format is %s mail_path", "-d", "-d")
                 }
-                server->users_dir = init_users_dir(argv[0], &server->users_count);
+                init_users_dir(argv[0]);
                 mail_dir_set = true;
             }
             else{
-                fprintf(stderr, "FATAL_ERROR: Mail directory already set \n");
-                close_server();
-                exit(1);
+                handle_exit("%s: Mail directory already set", "-d");
             }
         }
         else if (strcmp(argv[0], "-u") == 0){
             if (!mail_dir_set){
-                fprintf(stderr, "FATAL_ERROR: Mail directory needs to be specified first\n");
-                close_server();
-                exit(1);
+                handle_exit("%s: Mail directory needs to be specified first", "-d")
             }
             argc--;
             argv++;
@@ -166,18 +166,14 @@ struct server *init_server(char *root_path, int argc, char *argv[]) {
             registered_users_count++;
         }
         else {
-            fprintf(stderr, "FATAL_ERROR: Invalid command \"%s\"\n", argv[0]);
-            close_server();
-            exit(1);
+            handle_exit("Invalid command \"%s\"", argv[0]);
         }
         argv++;
         argc--;
     }
 
     if (registered_users_count < server->users_count){
-        fprintf(stderr, "FATAL_ERROR: Missing passwords for user directories\n");
-        close_server();
-        exit(1);
+        handle_exit("%s: Missing passwords for mail directory", "-u")
     }
 
     return server;
@@ -269,7 +265,9 @@ static void free_clients() {
 void close_server() {
     close(server->server_sock);
     free_clients();
-    free_users_dir();
+    if (server->users_dir != NULL){
+        free_users_dir();
+    }
     free(server->server_sock_handler);
     free(server);
     server = NULL;

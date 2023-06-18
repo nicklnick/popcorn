@@ -32,7 +32,7 @@ int main(int argc, char *argv[]) {
     signal(SIGINT, sigterm_handler);
 
     // obtener path mail, obtener char ** pass
-    init_server("../mail", argc, argv);
+    init_server(argc, argv);
 
     int server_sock = get_server_socket();
     set_server_sock_handlers(&server_passive_accept, NULL);

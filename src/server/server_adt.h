@@ -14,7 +14,7 @@ struct user_dir {
     bool is_open;
 };
 
-server_ptr init_server(char *root_path, int argc, char *argv[]);
+server_ptr init_server(int argc, char *argv[]);
 
 struct user_dir *get_user_dir(char *username, int len);
 
