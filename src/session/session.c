@@ -234,11 +234,15 @@ fd_handler *get_fd_handler(session_ptr session) {
 }
 
 void close_client_session(session_ptr session) {
+    close(session->socket);
     free_state_machine(session->state_machine);
     command_parser_destroy(session->command_parser);
     // FIXME: Tirar error porque el comand_parser retorna su propio event
     // entonces ya fue liberado. free(session->event);
     free_stack_adt(session->action_stack);
+    closedir(session->client_dir->dir_pt);
+    free(session->client_dir->mails);
+    free(session->client_dir);
     free(session->client_fd_handler);
     free(session);
 }

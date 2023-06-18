@@ -222,7 +222,7 @@ int transaction_list_command(session_ptr session, char * arg, int arg_len, char 
 
     if(current == PROCESS){
         rewinddir(client_dir);
-        int count,total = 0;
+        int total = 0,count = 0;
         get_file_stats(client_dir,&count,&total,mail_path);
         total_len  = sprintf(aux_buf,OK_LIST_NO_ARG,count,total);
 

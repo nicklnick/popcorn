@@ -44,6 +44,7 @@ int pop(stack_adt stack, stack_data_t * data){
 
     stack->top = top->next;
     *data = top->data;
+    free(top);
     return 0;
 }
 
@@ -51,9 +52,9 @@ void free_stack_adt(stack_adt stack){
     node * current = stack->top;
 
     while(current != NULL){
-        node * next = current->next;
-        free(current);
-        current = next;
+        node * aux = current;
+        current = aux->next;
+        free(aux);
     }
 
     free(stack);
