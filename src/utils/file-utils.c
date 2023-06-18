@@ -19,13 +19,15 @@ int get_file_count(DIR *dir) {
 }
 
 struct dirent * readdir_files(DIR * dir, int file_pos){
-    struct dirent * dirent = readdir(dir);
-    int i = 0;
-    while(i < file_pos && dirent != NULL){
-        if (dirent->d_type == DT_REG){
+    struct dirent * dirent;
+    int i = 1;
+    do {
+        dirent = readdir(dir);
+        if (dirent != NULL && dirent->d_type == DT_REG && dirent->d_type != DT_DIR){
             i++;
         }
-        dirent = readdir(dir);
     }
+    while(i <= file_pos && dirent != NULL);
+
     return dirent;
 }
