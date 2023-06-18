@@ -280,3 +280,43 @@ int transaction_list_command(session_ptr session, char * arg, int arg_len, char 
 
     return total_len;
 }
+
+int transaction_quit_command(session_ptr session){
+
+    DIR * client_dir = get_client_dir_pt(session);
+    rewinddir(client_dir);
+
+    char mail_path[MAILPATH_MAX] = {0};
+    char username[NAME_MAX] = {0};
+    int username_len = get_username(session, username);
+    strcpy(mail_path, get_mail_dir_path());
+    strcat(mail_path, "/");
+    strncat(mail_path, username, username_len);
+    strcat(mail_path, "/");
+    int mail_path_base_len = strlen(mail_path);
+
+    int * mails = get_client_dir_mails(session);
+    int total = get_client_total_mails(session);
+
+    struct dirent * client_dirent;
+
+    int i = 0;
+    while(i < total){
+        client_dirent = readdir(client_dir);
+        if(client_dirent->d_type != DT_REG)
+            continue ;
+        if(mails[i] == 1){
+            mail_path[mail_path_base_len] = '\0';
+            strcat(mail_path,client_dirent->d_name);
+
+            int result = remove(mail_path);
+            if(result == -1)
+                perror("transaction_quit_command()");
+        }
+        i++;
+    }
+
+    struct user_dir * user_d = get_user_dir(username,strlen(username));
+    user_d->is_open = false;
+    return 0;
+}

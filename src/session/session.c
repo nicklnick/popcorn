@@ -235,6 +235,10 @@ int *get_client_dir_mails(session_ptr session) {
     return session->client_dir->mails;
 }
 
+int get_client_total_mails(session_ptr session){
+    return session->client_dir->total_mails;
+}
+
 fd_handler *get_fd_handler(session_ptr session) {
     return session->client_fd_handler;
 }
