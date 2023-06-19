@@ -374,6 +374,7 @@ int transaction_retr_command(session_ptr session, char * arg, int arg_len, char 
             strncpy(response_buff+buffer_response_index,END_OF_MULTILINE_RETR,len);
             buffer_response_index+=len;
         }
+        close(mail_retr->mail_fd);
     }else{
         push_action_state(session,PROCESSING);
     }
