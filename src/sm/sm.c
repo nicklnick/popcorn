@@ -46,6 +46,10 @@ int auth(state_machine *self, session_ptr session, char *buff, int nbytes) {
         len = strlen(OK_QUIT);
         strncpy(buff, OK_QUIT, len);
         self->current_state = END;
+    }else if (strncmp(event->command,CAPA,nbytes) == 0) {
+        pop_action_state(session);
+        len = strlen(CAPA_AUTH);
+        strncpy(buff, CAPA_AUTH, len);
     }
     else {
         pop_action_state(session);
@@ -102,6 +106,10 @@ int transaction(state_machine *self, session_ptr session, char *buff,
                                  response);
         len = strlen(OK_RSET);
         strncpy(buff, OK_RSET, len);
+    }else if (strncmp(event->command,CAPA,nbytes) == 0) {
+        pop_action_state(session);
+        len = strlen(CAPA_TRANSACTION);
+        strncpy(buff, CAPA_TRANSACTION,len);
     }
     else {
         pop_action_state(session);
@@ -131,7 +139,7 @@ int dispatch(state_machine *self, session_ptr session, char *buff, int nbytes) {
     return (*func_table[self->current_state])(self, session, buff, nbytes);
 }
 
-state_machine *new_state_machine() {
+state_machine *new_state_machine(void) {
     state_machine *state_machine = malloc(sizeof(state_machine));
     state_machine->current_state = START;
 

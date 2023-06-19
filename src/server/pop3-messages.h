@@ -26,6 +26,7 @@
 #define NOOP           "NOOP"
 #define RSET           "RSET"
 #define QUIT           "QUIT"
+#define CAPA           "CAPA"
 
 #define OK_STAT        "+OK STAT" // we need to append nn mm, so no \r\n
 #define ERR_STAT       "-ERR STAT\r\n"
@@ -46,10 +47,15 @@
 #define OK_RSET  "+OK RSET\r\n"
 
 // UPDATE
-#define OK_QUIT  "+OK QUIT\r\n"
-#define ERR_QUIT "-ERR QUIT\r\n"
+#define OK_QUIT               "+OK QUIT\r\n"
+#define ERR_QUIT              "-ERR QUIT\r\n"
 
-#define END_OF_MULTILINE ".\r\n"
+#define END_OF_MULTILINE      ".\r\n"
 #define END_OF_MULTILINE_RETR "\r\n.\r\n"
+
+// CAPA
+
+#define CAPA_AUTH        "+OK CAPA\r\nUSER\r\nPIPELINING\r\n.\r\n"
+#define CAPA_TRANSACTION "+OK CAPA\r\nPIPELINING\r\n.\r\n"
 
 #endif // POP3_MESSAGES_H
