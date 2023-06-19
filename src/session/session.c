@@ -153,7 +153,7 @@ void session_send_response(struct selector_key *key) {
         size_t rsize = 0;
         char *rbuffer = (char *)buffer_read_ptr(&session->wbuffer, &rsize);
         errno = 0;
-        int bytes_sent = (int)_send(session->socket, rbuffer, rsize, MSG_NOSIGNAL);
+        int bytes_sent = (int)send(session->socket, rbuffer, rsize, MSG_NOSIGNAL);
         //Client close the connection
         if(bytes_sent == -1 && errno == EPIPE){
             selector_unregister_fd(key->s,key->fd);
