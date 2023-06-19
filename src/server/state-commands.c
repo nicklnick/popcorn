@@ -364,7 +364,7 @@ int transaction_retr_command(session_ptr session, char * arg, int arg_len, char 
         }
 
         if(buffer_response_index == buffsize){
-            lseek(mail_retr->mail_fd,(data_index+1)-read_bytes,SEEK_CUR);
+            lseek(mail_retr->mail_fd,data_index-read_bytes,SEEK_CUR);
         }
     }
 
