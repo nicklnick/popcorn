@@ -7,6 +7,7 @@
 #define ACCEPT_CONNECTION_ERROR   "acceptConnection()"
 
 int setupServerSocket(int);
+int setup_udp_ipv4_socket(int port);
 int acceptConnection(int serverSock);
 int handleConnection(int clientSocket);
 
