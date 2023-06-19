@@ -235,8 +235,8 @@ static char is_marked(session_ptr session, int mail_num) {
 }
 
 int mark_to_delete(session_ptr session, int mail_num) {
-    if (is_marked(session, mail_num) ||
-        !IS_BETWEEN(mail_num, 0, session->client_dir->total_mails)) {
+    if (!IS_BETWEEN(mail_num, 0, session->client_dir->total_mails) ||is_marked(session, mail_num)
+        ) {
         return ERROR;
     }
 

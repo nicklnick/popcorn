@@ -19,6 +19,8 @@ int get_file_count(DIR *dir) {
 }
 
 struct dirent * readdir_files(DIR * dir, int file_pos){
+    if(file_pos <= 0)
+        return NULL;
     struct dirent * dirent;
     int i = 1;
     do {
