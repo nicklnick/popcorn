@@ -188,6 +188,8 @@ int get_server_socket() {
 }
 
 struct user_dir * get_user_dir(char * username, int len){
+    if(server == NULL)
+        return NULL;
 
     int i = 0;
     struct user_dir *user_dir;

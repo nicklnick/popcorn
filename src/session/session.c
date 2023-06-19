@@ -276,7 +276,8 @@ void close_client_session(session_ptr session) {
     free_stack_adt(session->action_stack);
 
     struct user_dir * user_d = get_user_dir(session->username, strlen(session->username));
-    user_d->is_open = false;
+    if(user_d != NULL)
+        user_d->is_open = false;
 
     closedir(session->client_dir->dir_pt);
     free(session->client_dir->mails);
