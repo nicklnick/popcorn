@@ -19,6 +19,7 @@ enum command_states {
     COMMAND,
     ARGUMENT1,
     ARGUMENT2,
+    FINISHING,
     FINISHED,
 };
 

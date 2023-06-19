@@ -37,20 +37,24 @@ static void next_token(struct parser_event *ret, const uint8_t c) {
     ret->index = 0;
 }
 
-static void finish(struct parser_event *ret, const uint8_t c) {
-    ret->type = VALID;
+static void finishing(struct parser_event *ret, const uint8_t c) {
+    ret->type = MAY_VALID;
     ret->index = 0;
     ret->cmd_len++;
     ret->arg1_len++;
     ret->arg2_len++;
 }
 
+static void finish(struct parser_event *ret, const uint8_t c) {
+    ret->type = VALID;
+}
+
 /** Transitions */
 static const struct parser_state_transition ST_COMMAND[] = {
     {
-        .when = '\n',
-        .dest = FINISHED,
-        .action = finish,
+        .when = '\r',
+        .dest = FINISHING,
+        .action = finishing,
     },
     {
         .when = ' ',
@@ -65,9 +69,9 @@ static const struct parser_state_transition ST_COMMAND[] = {
 };
 static const struct parser_state_transition ST_ARGUMENT1[] = {
     {
-        .when = '\n',
-        .dest = FINISHED,
-        .action = finish,
+        .when = '\r',
+        .dest = FINISHING,
+        .action = finishing,
     },
     {
         .when = ' ',
@@ -83,9 +87,9 @@ static const struct parser_state_transition ST_ARGUMENT1[] = {
 
 static const struct parser_state_transition ST_ARGUMENT2[] = {
     {
-        .when = '\n',
-        .dest = FINISHED,
-        .action = finish,
+        .when = '\r',
+        .dest = FINISHING,
+        .action = finishing,
     },
     {
         .when = ANY,
@@ -94,14 +98,23 @@ static const struct parser_state_transition ST_ARGUMENT2[] = {
     },
 };
 
+static const struct parser_state_transition ST_FINISHING[] = {
+    {
+        .when = '\n',
+        .dest = FINISHED,
+        .action = finish,
+    }
+};
+
 static const struct parser_state_transition *states[] = {
     ST_COMMAND,
     ST_ARGUMENT1,
     ST_ARGUMENT2,
+    ST_FINISHING
 };
 
 static const size_t states_n[] = {N(ST_COMMAND), N(ST_ARGUMENT1),
-                                  N(ST_ARGUMENT2)};
+                                  N(ST_ARGUMENT2), N(ST_FINISHING)};
 
 static struct parser_definition command_parser_def = {
     .states_count = N(states),
