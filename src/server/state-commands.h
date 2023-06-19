@@ -21,6 +21,8 @@ int transaction_rset_command(session_ptr session, char *arg, int arg_len,
 
 int transaction_list_command(session_ptr session, char * arg, int arg_len, char * response_buff, int buffsize);
 
+int transaction_retr_command(session_ptr session, char * arg, int arg_len, char * response_buff, int buffsize);
+
 int transaction_quit_command(session_ptr session);
 
 #endif // STATE_COMMANDS_H

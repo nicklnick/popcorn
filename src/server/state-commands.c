@@ -12,6 +12,7 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <fcntl.h>
 
 int auth_user_command(session_ptr session, char *arg, int arg_len,
                       char *response_buff) {
@@ -279,6 +280,106 @@ int transaction_list_command(session_ptr session, char * arg, int arg_len, char 
     }
 
     return total_len;
+}
+
+int transaction_retr_command(session_ptr session, char * arg, int arg_len, char * response_buff, int buffsize){
+
+    action_state current = pop_action_state(session);
+
+    //arg_len has number + '\0'
+    if(arg_len <= 1){
+        return sprintf(response_buff,ERR_COMMAND);
+    }
+
+    int mail_index =  strtol(arg,NULL, 10);
+
+    DIR * client_dir = get_client_dir_pt(session);
+    rewinddir(client_dir);
+
+    struct dirent * client_dirent;
+
+    char mail_path[MAILPATH_MAX] = {0};
+    char username[NAME_MAX] = {0};
+    int username_len = get_username(session, username);
+    strcpy(mail_path, get_mail_dir_path());
+    strcat(mail_path, "/");
+    strncat(mail_path, username, username_len);
+    strcat(mail_path, "/");
+    int mail_path_base_len = strlen(mail_path);
+
+    int i = 1;
+
+    while(i <= mail_index && ((client_dirent = readdir(client_dir))!= NULL)){
+        if(client_dirent->d_type == DT_REG)
+            i++;
+    }
+
+    if(client_dirent == NULL){
+        return sprintf(response_buff,ERR_RETR);
+    }
+
+    struct retr_state * mail_retr = get_session_retr_state(session);
+    int buffer_response_index = 0;
+
+    if(current == PROCESS){
+        strcat(mail_path, client_dirent->d_name);
+        mail_retr->mail_fd = open(mail_path,O_NONBLOCK);
+        buffer_response_index= strlen(OK_RETR);
+        strncpy(response_buff,OK_RETR,buffer_response_index);
+        buffsize -= buffer_response_index;
+    }
+
+    char mail_data[BUFFER_SIZE];
+    int read_bytes = 0;
+    stuffing_state current_state = NONE;
+
+    while (buffer_response_index < buffsize){
+
+        read_bytes = read(mail_retr->mail_fd,mail_data,BUFFER_SIZE-1);
+        mail_data[read_bytes] = '\0';
+        if(read_bytes == 0)
+            break ;
+
+        int data_index = 0;
+
+        for (; data_index < read_bytes && (buffer_response_index < buffsize); ++data_index) {
+            switch (current_state) {
+                case CR:
+                    if(mail_data[data_index] == '\n')
+                        current_state = LF;
+                    else
+                        current_state = NONE;
+                    break ;
+                case LF:
+                    if(mail_data[data_index] == '.'){
+                        response_buff[buffer_response_index++] = '.';
+                    }
+                    current_state = NONE;
+                    break ;
+                default:
+                    if(mail_data[data_index] == '\r')
+                        current_state = CR;
+            }
+            response_buff[buffer_response_index++] = mail_data[data_index];
+        }
+
+        if(buffer_response_index == buffsize){
+            lseek(mail_retr->mail_fd,(data_index+1)-read_bytes,SEEK_CUR);
+        }
+    }
+
+    if(read_bytes == 0){
+        int len = strlen(END_OF_MULTILINE_RETR);
+        if(buffer_response_index < buffsize-len){
+            strncpy(response_buff+buffer_response_index,END_OF_MULTILINE_RETR,len);
+            buffer_response_index+=len;
+        }
+    }else{
+        push_action_state(session,PROCESSING);
+    }
+
+    mail_retr->line_state = current_state;
+    return buffer_response_index;
 }
 
 int transaction_quit_command(session_ptr session){

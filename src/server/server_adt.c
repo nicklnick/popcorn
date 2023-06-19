@@ -304,3 +304,6 @@ void close_server() {
     free(server);
     server = NULL;
 }
+
+
+// curl pop3://saul:castaneda@localhost:1110/3 > output

@@ -82,7 +82,7 @@ int transaction(state_machine *self, session_ptr session, char *buff,
     } else if (strncmp(event->command, LIST, nbytes) == 0) {
         len = transaction_list_command(session,event->argument1,event->arg1_len,buff,nbytes);
     } else if (strncmp(event->command, RETR, nbytes) == 0) {
-
+        len = transaction_retr_command(session,event->argument1,event->arg1_len,buff,nbytes);
     } else if (strncmp(event->command, DELE, nbytes) == 0) {
         int status = transaction_dele_command(session, event->argument1,
                                               event->arg1_len, response);

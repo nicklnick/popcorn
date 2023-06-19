@@ -12,6 +12,14 @@ typedef struct client_session *session_ptr;
 
 typedef enum {READ = 0, READING, PROCESS, PROCESSING, WRITE, WRITING} action_state;
 
+typedef enum stuffing_state {CR,LF,DOT,NONE} stuffing_state;
+
+struct retr_state{
+    int mail_fd;
+    stuffing_state line_state;
+};
+
+
 session_ptr new_client_session(int client_socket);
 
 void close_client_fd_handler (struct selector_key *key);
@@ -50,6 +58,8 @@ int *get_client_dir_mails(session_ptr session);
 int get_client_total_mails(session_ptr session);
 
 fd_handler *get_fd_handler(session_ptr session);
+
+struct retr_state * get_session_retr_state(session_ptr session);
 
 void init_client_dir_mails(session_ptr session);
 

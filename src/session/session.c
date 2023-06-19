@@ -14,6 +14,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
+#include <errno.h>
 
 struct client_dir {
     DIR *dir_pt;
@@ -25,20 +26,27 @@ struct client_dir {
 
 typedef struct client_session {
     int socket;
+
     char username[BUFFER_SIZE];
+
     buffer rbuffer;
     char rbuffer_data[BUFFER_SIZE];
     buffer wbuffer;
     char wbuffer_data[BUFFER_SIZE];
+
     state_machine_ptr state_machine;
+
     struct parser *command_parser;
     struct parser_event *event;
 
     struct client_dir *client_dir;
+
     struct fd_handler *client_fd_handler;
     int wbytes;
 
     stack_adt action_stack;
+
+    struct retr_state * retr_state;
 
 } client_session;
 
@@ -64,6 +72,8 @@ client_session *new_client_session(int client_socket) {
     session->client_dir = _calloc(1, sizeof(struct client_dir));
     session->client_dir->pt_index = 1;
 
+    session->retr_state = _calloc(1,sizeof (struct retr_state));
+
     return session;
 }
 
@@ -80,7 +90,10 @@ void session_read(struct selector_key *key) {
         size_t wsize = 0;
         char *wbuffer = (char *)buffer_write_ptr(&session->rbuffer, &wsize);
         ssize_t bytes_recv = _recv(session->socket, wbuffer, wsize, 0);
-
+        if(bytes_recv == 0){
+            selector_unregister_fd(key->s,key->fd);
+            return ;
+        }
         buffer_write_adv(&session->rbuffer, bytes_recv);
     }
 
@@ -139,7 +152,13 @@ void session_send_response(struct selector_key *key) {
     if (wbytes > 0) {
         size_t rsize = 0;
         char *rbuffer = (char *)buffer_read_ptr(&session->wbuffer, &rsize);
-        int bytes_sent = (int)_send(session->socket, rbuffer, rsize, 0);
+        errno = 0;
+        int bytes_sent = (int)_send(session->socket, rbuffer, rsize, MSG_NOSIGNAL);
+        //Client close the connection
+        if(bytes_sent == -1 && errno == EPIPE){
+            selector_unregister_fd(key->s,key->fd);
+            return;
+        }
         buffer_read_adv(&session->wbuffer, bytes_sent);
         wbytes -= bytes_sent;
         session->wbytes = wbytes;
@@ -243,6 +262,10 @@ fd_handler *get_fd_handler(session_ptr session) {
     return session->client_fd_handler;
 }
 
+struct retr_state * get_session_retr_state(session_ptr session){
+    return session->retr_state;
+}
+
 void close_client_session(session_ptr session) {
     close(session->socket);
     remove_client(session);
@@ -251,10 +274,15 @@ void close_client_session(session_ptr session) {
     // FIXME: Tirar error porque el comand_parser retorna su propio event
     // entonces ya fue liberado. free(session->event);
     free_stack_adt(session->action_stack);
+
+    struct user_dir * user_d = get_user_dir(session->username, strlen(session->username));
+    user_d->is_open = false;
+
     closedir(session->client_dir->dir_pt);
     free(session->client_dir->mails);
     free(session->client_dir);
     free(session->client_fd_handler);
+    free(session->retr_state);
     free(session);
 }
 
@@ -285,3 +313,4 @@ void push_action_state(session_ptr session, action_state action) {
     action_data.action = action;
     push(session->action_stack, action_data);
 }
+
