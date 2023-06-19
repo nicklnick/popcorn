@@ -42,7 +42,12 @@ int auth(state_machine *self, session_ptr session, char *buff, int nbytes) {
             init_client_dir_mails(session);
             self->current_state = TRANSACTION;
         }
-    } else {
+    } else if (strncmp(event->command,QUIT,nbytes) == 0){
+        len = strlen(OK_QUIT);
+        strncpy(buff, OK_QUIT, len);
+        self->current_state = END;
+    }
+    else {
         pop_action_state(session);
         len = strlen(ERR_COMMAND);
         strncpy(buff, ERR_COMMAND, len);
@@ -58,8 +63,8 @@ int transaction(state_machine *self, session_ptr session, char *buff,
     struct parser_event *event = get_session_event(session);
 
     char response[RESPONSE_LEN] = {0};
-    if (strcmp(event->command, QUIT) == 0) {
-        pop_action_state(session);
+    if (strncmp(event->command, QUIT,nbytes) == 0) {
+        transaction_quit_command(session);
         len = strlen(OK_QUIT);
         strncpy(buff, OK_QUIT, len);
         self->current_state = END;
@@ -97,7 +102,8 @@ int transaction(state_machine *self, session_ptr session, char *buff,
                                  response);
         len = strlen(OK_RSET);
         strncpy(buff, OK_RSET, len);
-    } else {
+    }
+    else {
         pop_action_state(session);
         len = strlen(ERR_COMMAND);
         strncpy(buff, ERR_COMMAND, len);

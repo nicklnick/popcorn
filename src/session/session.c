@@ -8,6 +8,7 @@
 #include "../utils/general-utils.h"
 #include "../utils/stack_adt.h"
 #include "../utils/staus-codes.h"
+#include "../server/server_adt.h"
 #include <dirent.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -51,6 +52,7 @@ client_session *new_client_session(int client_socket) {
     session->client_fd_handler = calloc(1, sizeof(fd_handler));
     session->client_fd_handler->handle_read = session_read;
     session->client_fd_handler->handle_write = session_send_response;
+    session->client_fd_handler->handle_close = close_client_fd_handler;
     session->wbytes = 0;
     session->action_stack = new_stack_adt();
     push_action_state(session,READ);
@@ -161,6 +163,10 @@ void session_send_response(struct selector_key *key) {
         selector_set_interest_key(key, OP_READ);
         return;
     }
+
+    if(get_session_state(session) == END){
+        selector_unregister_fd(key->s,key->fd);
+    }
 }
 
 state get_session_state(session_ptr session) {
@@ -229,12 +235,17 @@ int *get_client_dir_mails(session_ptr session) {
     return session->client_dir->mails;
 }
 
+int get_client_total_mails(session_ptr session){
+    return session->client_dir->total_mails;
+}
+
 fd_handler *get_fd_handler(session_ptr session) {
     return session->client_fd_handler;
 }
 
 void close_client_session(session_ptr session) {
     close(session->socket);
+    remove_client(session);
     free_state_machine(session->state_machine);
     command_parser_destroy(session->command_parser);
     // FIXME: Tirar error porque el comand_parser retorna su propio event
@@ -245,6 +256,12 @@ void close_client_session(session_ptr session) {
     free(session->client_dir);
     free(session->client_fd_handler);
     free(session);
+}
+
+void close_client_fd_handler (struct selector_key *key){
+    if(key->data == NULL)
+        return ;
+    close_client_session(key->data);
 }
 
 action_state pop_action_state(session_ptr session) {

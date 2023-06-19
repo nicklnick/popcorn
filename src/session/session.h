@@ -14,6 +14,8 @@ typedef enum {READ = 0, READING, PROCESS, PROCESSING, WRITE, WRITING} action_sta
 
 session_ptr new_client_session(int client_socket);
 
+void close_client_fd_handler (struct selector_key *key);
+
 void close_client_session(session_ptr session);
 
 void session_read(struct selector_key *key);
@@ -44,6 +46,8 @@ int get_client_dir_pt_index(session_ptr session);
 void set_client_dir_pt_index(session_ptr session, int index);
 
 int *get_client_dir_mails(session_ptr session);
+
+int get_client_total_mails(session_ptr session);
 
 fd_handler *get_fd_handler(session_ptr session);
 

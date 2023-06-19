@@ -33,4 +33,6 @@ void set_server_sock_handlers(void (*handle_read)(struct selector_key *key),
 
 int add_client(session_ptr client);
 
+int remove_client(session_ptr client);
+
 #endif // SERVER_ADT_H

@@ -56,7 +56,8 @@ int main(int argc, char *argv[]) {
         selector_select(selector);
     }
 
-    close_server();
+    selector_destroy(selector);
+    return 0;
 }
 
 static fd_selector server_init_selector(int server_sock,

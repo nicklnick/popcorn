@@ -38,6 +38,8 @@ struct server {
     client_node *clients;
     int clients_count;
 
+    int historic_client_count;
+
     struct fd_handler *server_sock_handler;
 };
 
@@ -134,8 +136,10 @@ struct server *init_server(int argc, char *argv[]) {
 
     server->clients = NULL;
     server->clients_count = 0;
+    server->historic_client_count = 0;
 
     server->server_sock_handler = malloc(sizeof(fd_handler));
+    server->server_sock_handler->handle_close = close_server;
 
     argv++;
     argc--;
@@ -243,6 +247,35 @@ int add_client(session_ptr client) {
     return 0;
 }
 
+int remove_client(session_ptr client){
+    if(server == NULL)
+        return 0;
+    client_node * prev = server->clients;
+    if(prev == NULL){
+        return -1;
+    }
+    client_node * current = prev->next;
+    if(current == NULL){
+        if(prev->client == client){
+            server->clients = NULL;
+            free(prev);
+            return 0;
+        }
+    }
+    while(current != NULL){
+        if(current->client == client){
+            client_node * to_free = current;
+            prev->next = current->next;
+            server->clients_count--;
+            free(to_free);
+            return 0;
+        }
+        prev = current;
+        current = prev->next;
+    }
+    return -1;
+}
+
 static void free_users_dir() {
     struct user_dir **users_dir = server->users_dir;
     for (int i = 0; i < server->users_count; ++i) {
@@ -255,7 +288,6 @@ static void free_clients() {
     client_node *current = server->clients;
     while (current != NULL) {
         session_ptr client_session = current->client;
-        close_client_session(client_session);
         client_node *to_free = current;
         current = to_free->next;
         free(to_free);
