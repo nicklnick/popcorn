@@ -1,4 +1,5 @@
 #include "../session/session.h"
+#include "popcorn/popcorn-adt.h"
 #include "server_adt.h"
 #include "utils.h"
 #include "wrapper-functions.h"
@@ -38,6 +39,11 @@ int main(int argc, char *argv[]) {
     set_server_sock_handlers(&server_passive_accept, NULL);
     struct fd_handler *server_sock_handler = get_server_sock_fd_handler();
 
+    int popcorn_sock = get_popcorn_server_sock();
+    // FIXME
+    set_popcorn_sock_handlers(NULL, NULL);
+    struct fd_handler *popcorn_sock_handler = get_popcorn_sock_fd_handler();
+
     struct selector_init conf = {
         .signal = SIGALRM,
         .select_timeout =
@@ -51,6 +57,10 @@ int main(int argc, char *argv[]) {
         server_init_selector(server_sock, server_sock_handler, &conf);
     if (selector == NULL)
         return -1;
+    selector_register(selector, server_sock, server_sock_handler, OP_READ,
+                      NULL);
+    selector_register(selector, popcorn_sock, popcorn_sock_handler, OP_READ,
+                      NULL);
 
     while (!done) {
         selector_select(selector);
@@ -74,8 +84,6 @@ static fd_selector server_init_selector(int server_sock,
     }
 
     fd_selector selector = selector_new(1024);
-    selector_register(selector, server_sock, server_sock_handler, OP_READ,
-                      NULL);
 
     return selector;
 }
