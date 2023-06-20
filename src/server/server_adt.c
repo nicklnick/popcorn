@@ -28,7 +28,8 @@ typedef struct client_node {
 } client_node;
 
 struct server {
-    int server_sock;
+    int ipv4_server_sock;
+    int ipv6_server_sock;
 
     struct user_dir **users_dir;
     int users_count;
@@ -125,14 +126,17 @@ struct server *init_server(int argc, char *argv[]) {
         exit(1);
     }
 
-    int server_sock = setupServerSocket(PORT);
-    if (server_sock < 0) {
+    int ipv4_server_sock = setupIpv4ServerSocket(PORT);
+    int ipv6_server_sock = setupIpv6ServerSocket(PORT);
+
+    if (ipv4_server_sock < 0) {
         perror(SETUP_SERVER_SOCKET_ERROR);
         return NULL;
     }
 
     server = calloc(1, sizeof(struct server));
-    server->server_sock = server_sock;
+    server->ipv4_server_sock = ipv4_server_sock;
+    server->ipv6_server_sock = ipv6_server_sock;
 
     server->clients = NULL;
     server->clients_count = 0;
@@ -183,8 +187,12 @@ struct server *init_server(int argc, char *argv[]) {
     return server;
 }
 
-int get_server_socket() {
-    return server->server_sock;
+int get_ipv4_server_socket(void) {
+    return server->ipv4_server_sock;
+}
+
+int get_ipv6_server_socket(void) {
+    return server->ipv6_server_sock;
 }
 
 struct user_dir * get_user_dir(char * username, int len){
@@ -205,11 +213,11 @@ struct user_dir * get_user_dir(char * username, int len){
     return NULL;
 }
 
-char *get_mail_dir_path() {
+char *get_mail_dir_path(void) {
     return server->root_path;
 }
 
-struct fd_handler *get_server_sock_fd_handler() {
+struct fd_handler *get_server_sock_fd_handler(void) {
     return server->server_sock_handler;
 }
 
@@ -278,7 +286,7 @@ int remove_client(session_ptr client){
     return -1;
 }
 
-static void free_users_dir() {
+static void free_users_dir(void) {
     struct user_dir **users_dir = server->users_dir;
     for (int i = 0; i < server->users_count; ++i) {
         free(users_dir[i]);
@@ -286,7 +294,7 @@ static void free_users_dir() {
     free(users_dir);
 }
 
-static void free_clients() {
+static void free_clients(void) {
     client_node *current = server->clients;
     while (current != NULL) {
         session_ptr client_session = current->client;
@@ -297,7 +305,10 @@ static void free_clients() {
 }
 
 void close_server() {
-    close(server->server_sock);
+    if(server == NULL)
+        return ;
+    close(server->ipv4_server_sock);
+    close(server->ipv6_server_sock);
     free_clients();
     if (server->users_dir != NULL){
         free_users_dir();
@@ -306,6 +317,3 @@ void close_server() {
     free(server);
     server = NULL;
 }
-
-
-// curl pop3://saul:castaneda@localhost:1110/3 > output

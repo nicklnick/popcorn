@@ -5,8 +5,10 @@
 
 #define SETUP_SERVER_SOCKET_ERROR "setupServerSocket()"
 #define ACCEPT_CONNECTION_ERROR   "acceptConnection()"
+#define MAX_QUEUED_CONNECTIONS 20
 
-int setupServerSocket(int);
+int setupIpv4ServerSocket(int);
+int setupIpv6ServerSocket(int);
 int acceptConnection(int serverSock);
 int handleConnection(int clientSocket);
 

@@ -18,15 +18,17 @@ server_ptr init_server(int argc, char *argv[]);
 
 struct user_dir *get_user_dir(char *username, int len);
 
-server_ptr get_server_instance();
+server_ptr get_server_instance(void);
 
-int get_server_socket();
+int get_ipv4_server_socket(void);
 
-char *get_mail_dir_path();
+int get_ipv6_server_socket(void);
+
+char *get_mail_dir_path(void);
 
 void close_server();
 
-struct fd_handler *get_server_sock_fd_handler();
+struct fd_handler *get_server_sock_fd_handler(void);
 
 void set_server_sock_handlers(void (*handle_read)(struct selector_key *key),
                               void (*handle_write)(struct selector_key *key));
