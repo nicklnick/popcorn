@@ -1,4 +1,5 @@
 #include "popcorn-handler.h"
+#include "popcorn-commands.h"
 #include "request_parser.h"
 #include <netdb.h>
 #include <stdio.h>
@@ -32,11 +33,26 @@ void popcorn_read(struct selector_key *key) {
            request->version, request->username, request->password,
            request->req_id, request->command);
 
-    free(request);
+    popcorn_response *response = malloc(sizeof(popcorn_response));
+    if (response == NULL) {
+        printf("Error");
+        return;
+    }
+
+    handle_request(request, response);
 
     char wbuffer[256];
-    int wbytes = snprintf(wbuffer, 256, "to port %d\n", client.sin_port);
+    int wbytes = snprintf(wbuffer, 256,
+                          "popcorn\r\nversion: %d\r\nreq-id: %d\r\nstatus: "
+                          "%d\r\nvalue: %s\r\n",
+                          response->version, response->req_id, response->status,
+                          response->value);
+
+    printf("RESPONSE SENT\n%s", wbuffer);
 
     sendto(key->fd, wbuffer, wbytes, 0, (struct sockaddr *)&client,
            client_length);
+
+    free(response);
+    free(request);
 }

@@ -8,11 +8,11 @@
 // hours to grow corn + min to microwave them (average)
 #define POPCORN_PORT 2882
 
-#define USER_PASS  2
-#define USER       0
-#define PASS       1
-#define ADMIN_USER "pop"
-#define ADMIN_PASS "corn"
+#define USER_PASS    2
+#define USER         0
+#define PASS         1
+#define ADMIN_USER   "pop"
+#define ADMIN_PASS   "corn"
 
 struct popcorn {
     int server_sock;
@@ -36,7 +36,7 @@ struct popcorn *init_popcorn(void) {
 
     popcorn_server = _malloc(sizeof(struct popcorn));
     popcorn_server->server_sock = server_sock;
-    
+
     // save user and pass
     /*popcorn_server->auth[USER] =
         (char *)_calloc(strlen(ADMIN_USER), sizeof(char));

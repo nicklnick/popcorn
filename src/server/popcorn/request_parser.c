@@ -106,8 +106,7 @@ int parse_credentials(parser_state *state, char *key, char *value,
 int parse_header(parser_state *state, char *key, char *value,
                  popcorn_request *request) {
     if (strcmp(key, "popcorn") == 0)
-        ;
-    *state = VERSION;
+        *state = VERSION;
 
     return 0;
 }
