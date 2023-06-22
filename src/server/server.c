@@ -3,10 +3,13 @@
 #include "session/session.h"
 #include "utils.h"
 #include "wrapper-functions.h"
+#include <errno.h>
+#include <netdb.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
 
@@ -26,18 +29,29 @@ static fd_selector server_init_selector(int ipv4_server_sock,
 void server_passive_accept(struct selector_key *key);
 
 void popcorn_read(struct selector_key *key) {
-    char rbuffer[256];
 
     size_t rsize = 256;
-    ssize_t bytes_recv = _recv(key->fd, rbuffer, rsize, 0);
-   
-    printf("%s\n", rbuffer);
+    char rbuffer[rsize];
+
+    struct sockaddr_in client;
+    unsigned int client_length = sizeof(client);
+
+    ssize_t nbytes = recvfrom(key->fd, rbuffer, rsize, 0,
+                              (struct sockaddr *)&client, &client_length);
+    if (nbytes > 0)
+        printf("%s\n", rbuffer);
+
+    char wbuffer[256];
+    int wbytes = snprintf(wbuffer, 256, "to port %d\n", client.sin_port);
+
+    sendto(key->fd, wbuffer, wbytes, 0, (struct sockaddr *)&client,
+           client_length);
 }
 
 int main(int argc, char *argv[]) {
 
-    close(STDIN_FILENO);
-    close(STDOUT_FILENO);
+    /*close(STDIN_FILENO);
+    close(STDOUT_FILENO);*/
 
     signal(SIGTERM, sigterm_handler);
     signal(SIGINT, sigterm_handler);
@@ -121,8 +135,6 @@ void server_passive_accept(struct selector_key *key) {
     selector_register(key->s, client_socket, get_fd_handler(client_session),
                       OP_WRITE, client_session);
 }
-
-
 
 // void handler_read(struct selector_key * key)
 
