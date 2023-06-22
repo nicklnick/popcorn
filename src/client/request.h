@@ -6,7 +6,7 @@
 #define NAME_SIZE 16
 #define PASSWORD_SIZE 16
 #define OPTION_SIZE 32
-#define TOTAL_OPTIONS 1
+#define TOTAL_OPTIONS 6
 
 #define SUCCESS 0
 #define ERROR -1

@@ -5,10 +5,11 @@ struct request{
   char username[NAME_SIZE];
   char password[PASSWORD_SIZE];
   int req_id;
-  char * command;
-  char * argument1;
-  char * argument2;
+  char command[20];
+  char argument1[20];
+  char argument2[20];
 } request;
+
 
 typedef int(*handle_arguments)(int argc, char *argv[], struct request * request);
 
@@ -51,14 +52,93 @@ static int handle_auth(int argc, char *argv[], struct request * request){
   return 1;
 }
 
-static int handle_current(int argc, char ** argv, struct request * request){
-  request->command= "current";
+static int handle_bytes(int argc, char ** argv, struct request * request){
+  if (argc >=1){
+    error_and_exit("bytes: must not receive any arguments")
+  }
+  strcpy(request->command, "bytes");
   return 0;
 }
 
-struct option options[32] = {
-  {.option="current", .handler=handle_current}
+static int handle_history(int argc, char ** argv, struct request * request){
+  if (argc >= 1){
+    error_and_exit("history: must not receive any arguments")
+  }
+  strcpy(request->command, "history");
+  return 0;
+}
+
+static int handle_current(int argc, char ** argv, struct request * request){
+  if (argc >= 1){
+    error_and_exit("current: must not receive any arguments")
+  }
+  strcpy(request->command, "current");
+  return 0;
+}
+
+static int handle_password(int argc, char ** argv, struct request * request){
+  if (argc < 2){
+    error_and_exit("password: missing arguments")
+  }
+  if (argc > 2){
+    error_and_exit("password: too many arguments")
+  }
+
+  strcpy(request->command, "password");
+
+  strcpy(request->argument1, argv[0]);
+  strcpy(request->argument2, argv[1]);
+
+  return 0;
+}
+
+static int handle_delete(int argc, char ** argv, struct request * request){
+  if (argc < 1){
+    error_and_exit("delete: missing arguments")
+  }
+  if (argc > 1){
+    error_and_exit("delete: too many arguments")
+  }
+
+  strcpy(request->command, "delete");
+
+  strcpy(request->argument1, argv[0]);
+
+  return 0;
+}
+
+static int handle_conc(int argc, char ** argv, struct request * request){
+  if (argc < 1){
+    error_and_exit("conc: missing arguments")
+  }
+  if (argc > 1){
+    error_and_exit("conc: too many arguments")
+  }
+
+  strcpy(request->command, "conc");
+
+  strcpy(request->argument1, argv[0]);
+
+  return 0;
+}
+
+struct option options[TOTAL_OPTIONS] = {
+  {.option="bytes", .handler= &handle_bytes},
+  {.option="history", .handler=&handle_history},
+  {.option="current", .handler=&handle_current},
+  {.option="password", .handler=&handle_password},
+  {.option="delete", .handler=&handle_delete},
+  {.option="conc", .handler=&handle_conc},
 };
+
+static handle_arguments get_option_function(char * command){
+  for (int i=0; i < TOTAL_OPTIONS; i++){
+      if (strcmp(command, options[i].option) == 0){
+        return options[i].handler;
+      }
+  }
+  return NULL;
+}
 
 struct request * get_request_struct(int version, int argc, char * argv[]){
     if (argc == 0){
@@ -85,26 +165,16 @@ struct request * get_request_struct(int version, int argc, char * argv[]){
       error_and_exit("missing a command\nTry \"./popcorn_client -h\" for more information.")
     }
     
-    bool found_command = false;
-    for (int i=0; i < TOTAL_OPTIONS; i++){
-      if (strcmp(argv[0], options[i].option) == 0){
-        found_command=true;
-        argc--;
-        argv++;
-        int arguments_consumed = options[i].handler(argc, argv, request);
-        argc -= arguments_consumed;
-        argv += arguments_consumed;
-        if (argc != 0){
-          free(request);
-          error_and_exit("too many arguments\nTry \"./popcorn_client -h\" for more information.")
-        }
-      }
-    }
+    handle_arguments handler = get_option_function(argv[0]);
 
-    if (!found_command){
+    if (handler == NULL){
       free(request);
       error_and_exit("not a valid command\nTry \"./popcorn_client -h\" for more information.")
     }
+
+    argc--;
+    argv++;
+    handler(argc, argv, request);
 
     request->version = version;
     request->req_id = 1;

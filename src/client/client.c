@@ -3,6 +3,7 @@
 #include <netdb.h>
 #include <errno.h>
 #include "request.h"
+#include "response_parser.h"
 
 #define BUFFER_SIZE 1024
 #define POPCORN_PORT 2882
@@ -66,11 +67,12 @@ int main(int argc, char *argv[]) {
     printf("Received: %s\n", response_buffer); 
   }
 
-  int status = 0;
-  char * value= NULL;
-  switch(status){
+  struct popcorn_response * response = malloc(sizeof(response));
+  parse_response(response_buffer, response);
+
+  switch(response->status_code){
     case 20:{
-      printf("%s\n", value);
+      printf("%s\n", response->response_value);
       break;
     }
     case 40: {
@@ -96,6 +98,7 @@ int main(int argc, char *argv[]) {
   }
   
   free(request);
+  free(response);
   close(client_socket);
   return 0;
   
