@@ -12,7 +12,7 @@
 #ifndef _COMMAND_PARSER_H
 #define _COMMAND_PARSER_H
 
-#include "../server/utils.h"
+#include "../utils.h"
 #include "parser.h"
 
 enum command_states {

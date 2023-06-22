@@ -1,7 +1,7 @@
 #include "sm.h"
-#include "../server/pop3-limits.h"
-#include "../server/pop3-messages.h"
-#include "../server/state-commands.h"
+#include "../pop3-limits.h"
+#include "../pop3-messages.h"
+#include "../state-commands.h"
 #include "../utils/staus-codes.h"
 #include <stdbool.h>
 #include <stdio.h>

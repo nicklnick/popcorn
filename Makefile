@@ -1,22 +1,13 @@
-include Makefile.inc
+all: server client
 
-# Source files
-SRCS := $(shell find . -name "*.c")
+server:
+	cd src/server; make all
 
-# Object files
-OBJS := $(patsubst $(SRC_DIR)/%.c,$(BIN_DIR)/%.o,$(SRCS))
+client:
+	cd src/client; make all
 
-# Binary output
-TARGET := $(BIN_DIR)/popcorn
-
-# Default target
-all: $(TARGET)
-
-# Compile and link the source files
-$(TARGET): $(SRCS)
-	@mkdir -p $(BIN_DIR)
-	$(CC) $(CFLAGS) $^ -o $@
-
-# Clean the generated files
 clean:
-	rm -rf $(BIN_DIR)
+	cd src/server; make clean 
+	cd src/client; make clean
+
+.PHONY: server client all clean

@@ -1,7 +1,7 @@
 #include "utils.h"
-#include "../parser/command_parser.h"
-#include "../session/session.h"
-#include "../sm/sm.h"
+#include "parser/command_parser.h"
+#include "session/session.h"
+#include "sm/sm.h"
 #include "wrapper-functions.h"
 #include <arpa/inet.h>
 #include <stdlib.h>

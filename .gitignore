@@ -71,6 +71,7 @@ dkms.conf
 
 # Local History for Visual Studio Code
 .history/
+.bash_history
 
 # Built Visual Studio Code Extensions
 *.vsix

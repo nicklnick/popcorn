@@ -1,6 +1,6 @@
 #include "server_adt.h"
-#include "../selector/selector.h"
-#include "../session/session.h"
+#include "selector/selector.h"
+#include "session/session.h"
 #include "wrapper-functions.h"
 #include <dirent.h>
 #include <stdio.h>

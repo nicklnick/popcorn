@@ -1,14 +1,14 @@
 #include "session.h"
 #include "../buffer/buffer.h"
 #include "../parser/command_parser.h"
-#include "../server/pop3-limits.h"
-#include "../server/wrapper-functions.h"
+#include "../pop3-limits.h"
+#include "../wrapper-functions.h"
 #include "../sm/sm.h"
 #include "../utils/file-utils.h"
 #include "../utils/general-utils.h"
 #include "../utils/stack_adt.h"
 #include "../utils/staus-codes.h"
-#include "../server/server_adt.h"
+#include "../server_adt.h"
 #include <dirent.h>
 #include <stdio.h>
 #include <stdlib.h>

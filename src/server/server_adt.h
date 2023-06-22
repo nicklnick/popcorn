@@ -1,8 +1,8 @@
 #ifndef SERVER_ADT_H
 #define SERVER_ADT_H
 
-#include "../selector/selector.h"
-#include "../session/session.h"
+#include "selector/selector.h"
+#include "session/session.h"
 #include "utils.h"
 #include <limits.h>
 

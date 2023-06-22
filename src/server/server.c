@@ -1,4 +1,4 @@
-#include "../session/session.h"
+#include "session/session.h"
 #include "server_adt.h"
 #include "utils.h"
 #include "wrapper-functions.h"
