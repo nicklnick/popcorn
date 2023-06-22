@@ -1,6 +1,6 @@
-#include "session/session.h"
 #include "popcorn/popcorn-adt.h"
 #include "server_adt.h"
+#include "session/session.h"
 #include "utils.h"
 #include "wrapper-functions.h"
 #include <signal.h>
@@ -19,10 +19,20 @@ static void sigterm_handler(const int signal) {
     done = true;
 }
 
-static fd_selector server_init_selector(int ipv4_server_sock,int ipv6_server_sock,
+static fd_selector server_init_selector(int ipv4_server_sock,
+                                        int ipv6_server_sock,
                                         fd_handler *server_sock_handler,
                                         struct selector_init *conf);
 void server_passive_accept(struct selector_key *key);
+
+void popcorn_read(struct selector_key *key) {
+    char rbuffer[256];
+
+    size_t rsize = 256;
+    ssize_t bytes_recv = _recv(key->fd, rbuffer, rsize, 0);
+   
+    printf("%s\n", rbuffer);
+}
 
 int main(int argc, char *argv[]) {
 
@@ -34,17 +44,20 @@ int main(int argc, char *argv[]) {
 
     // obtener path mail, obtener char ** pass
     init_server(argc, argv);
+    init_popcorn();
 
     int ipv4_server_sock = get_ipv4_server_socket();
     int ipv6_server_sock = get_ipv6_server_socket();
     set_server_sock_handlers(&server_passive_accept, NULL);
-    struct fd_handler *server_sock_handler = malloc(sizeof (struct fd_handler));
-    memcpy((void *)server_sock_handler,get_server_sock_fd_handler(), sizeof(struct fd_handler));
+    struct fd_handler *server_sock_handler = malloc(sizeof(struct fd_handler));
+    memcpy((void *)server_sock_handler, get_server_sock_fd_handler(),
+           sizeof(struct fd_handler));
 
-    //int popcorn_sock = get_popcorn_server_sock();
+    int popcorn_sock = get_popcorn_server_sock();
+
     // FIXME
-    //set_popcorn_sock_handlers(NULL, NULL);
-    //struct fd_handler *popcorn_sock_handler = get_popcorn_sock_fd_handler();
+    set_popcorn_sock_handlers(&popcorn_read, NULL);
+    struct fd_handler *popcorn_sock_handler = get_popcorn_sock_fd_handler();
 
     struct selector_init conf = {
         .signal = SIGALRM,
@@ -55,13 +68,13 @@ int main(int argc, char *argv[]) {
             },
     };
 
-    fd_selector selector =
-        server_init_selector(ipv4_server_sock,ipv6_server_sock, server_sock_handler, &conf);
+    fd_selector selector = server_init_selector(
+        ipv4_server_sock, ipv6_server_sock, server_sock_handler, &conf);
     if (selector == NULL)
         return -1;
 
-    //selector_register(selector, popcorn_sock, popcorn_sock_handler, OP_READ,
-    //                  NULL);
+    selector_register(selector, popcorn_sock, popcorn_sock_handler, OP_READ,
+                      NULL);
 
     while (!done) {
         selector_select(selector);
@@ -72,7 +85,8 @@ int main(int argc, char *argv[]) {
     return 0;
 }
 
-static fd_selector server_init_selector(int ipv4_server_sock,int ipv6_server_sock,
+static fd_selector server_init_selector(int ipv4_server_sock,
+                                        int ipv6_server_sock,
                                         fd_handler *server_sock_handler,
                                         struct selector_init *conf) {
 
@@ -107,6 +121,8 @@ void server_passive_accept(struct selector_key *key) {
     selector_register(key->s, client_socket, get_fd_handler(client_session),
                       OP_WRITE, client_session);
 }
+
+
 
 // void handler_read(struct selector_key * key)
 

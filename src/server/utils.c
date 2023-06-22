@@ -60,7 +60,7 @@ int setup_udp_ipv4_socket(int port) {
 
     _bind(server, (struct sockaddr *)&addr, sizeof(addr));
 
-    return 0;
+    return server;
 }
 
 int acceptConnection(int serverSock) {

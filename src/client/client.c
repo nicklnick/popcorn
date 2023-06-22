@@ -17,7 +17,6 @@ int main(int argc, char *argv[]) {
   get_request(request_buffer, request);
   printf("%s", request_buffer); 
 
-  return 1;
   ssize_t request_buffer_len = strlen(request_buffer);
 
   errno = 0;

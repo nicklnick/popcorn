@@ -24,6 +24,7 @@ struct popcorn {
 struct popcorn *popcorn_server = NULL;
 
 struct popcorn *init_popcorn(void) {
+
     if (popcorn_server != NULL)
         return popcorn_server;
 
@@ -35,13 +36,14 @@ struct popcorn *init_popcorn(void) {
 
     popcorn_server = _malloc(sizeof(struct popcorn));
     popcorn_server->server_sock = server_sock;
+    
     // save user and pass
-    popcorn_server->auth[USER] =
+    /*popcorn_server->auth[USER] =
         (char *)_calloc(strlen(ADMIN_USER), sizeof(char));
     strcpy(popcorn_server->auth[USER], ADMIN_USER);
     popcorn_server->auth[PASS] =
         (char *)_calloc(strlen(ADMIN_PASS), sizeof(char));
-    strcpy(popcorn_server->auth[PASS], ADMIN_PASS);
+    strcpy(popcorn_server->auth[PASS], ADMIN_PASS);*/
 
     popcorn_server->sock_fd_handler = _malloc(sizeof(fd_handler));
 
