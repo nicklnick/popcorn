@@ -9,6 +9,8 @@
 
 int setupIpv4ServerSocket(int);
 int setupIpv6ServerSocket(int);
+int setupServerSocket(int);
+int setup_udp_ipv4_socket(int port);
 int acceptConnection(int serverSock);
 int handleConnection(int clientSocket);
 

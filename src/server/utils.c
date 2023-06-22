@@ -4,6 +4,7 @@
 #include "sm/sm.h"
 #include "wrapper-functions.h"
 #include <arpa/inet.h>
+#include <netdb.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
@@ -45,6 +46,21 @@ int setupIpv6ServerSocket(int port){
     _listen(ipv6_sock, MAX_QUEUED_CONNECTIONS);
 
     return ipv6_sock;
+}
+
+int setup_udp_ipv4_socket(int port) {
+    struct sockaddr_in addr;
+    memset(&addr, 0, sizeof(addr));
+    addr.sin_family = AF_INET;
+    addr.sin_addr.s_addr = htonl(INADDR_ANY);
+    addr.sin_port = htons(port);
+
+    int server = _socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+    // TODO: ACCEPT IPV6
+
+    _bind(server, (struct sockaddr *)&addr, sizeof(addr));
+
+    return 0;
 }
 
 int acceptConnection(int serverSock) {

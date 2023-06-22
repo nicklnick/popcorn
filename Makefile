@@ -1,4 +1,4 @@
-all: server client
+all: clean server client
 
 server:
 	cd src/server; make all
