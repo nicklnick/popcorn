@@ -9,6 +9,7 @@
 #include <string.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include "utils/logger.h"
 
 #define MAX_CURRENT_CLIENTS 500
 
@@ -36,7 +37,11 @@ int main(int argc, char *argv[]) {
     init_server(argc, argv);
 
     int ipv4_server_sock = get_ipv4_server_socket();
+    log(INFO, "Got %d IPv4 server sock", ipv4_server_sock)
+
     int ipv6_server_sock = get_ipv6_server_socket();
+    log(INFO, "Got %d IPv6 server sock", ipv4_server_sock)
+
     set_server_sock_handlers(&server_passive_accept, NULL);
     struct fd_handler *server_sock_handler = malloc(sizeof (struct fd_handler));
     memcpy((void *)server_sock_handler,get_server_sock_fd_handler(), sizeof(struct fd_handler));
