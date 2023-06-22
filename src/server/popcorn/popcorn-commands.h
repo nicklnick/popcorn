@@ -4,16 +4,6 @@
 #define NAME_SIZE     16
 #define PASSWORD_SIZE 16
 
-struct popcorn_request {
-    int version;
-    char username[NAME_SIZE];
-    char password[PASSWORD_SIZE];
-    int req_id;
-    char *command;
-    char *argument1;
-    char *argument2;
-};
-
 typedef enum {
     OK = 20,
     CLIENT_ERROR = 40,

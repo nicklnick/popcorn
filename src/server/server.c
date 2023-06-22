@@ -1,4 +1,5 @@
 #include "popcorn/popcorn-adt.h"
+#include "popcorn/popcorn-handler.h"
 #include "server_adt.h"
 #include "session/session.h"
 #include "utils.h"
@@ -27,26 +28,6 @@ static fd_selector server_init_selector(int ipv4_server_sock,
                                         fd_handler *server_sock_handler,
                                         struct selector_init *conf);
 void server_passive_accept(struct selector_key *key);
-
-void popcorn_read(struct selector_key *key) {
-
-    size_t rsize = 256;
-    char rbuffer[rsize];
-
-    struct sockaddr_in client;
-    unsigned int client_length = sizeof(client);
-
-    ssize_t nbytes = recvfrom(key->fd, rbuffer, rsize, 0,
-                              (struct sockaddr *)&client, &client_length);
-    if (nbytes > 0)
-        printf("%s\n", rbuffer);
-
-    char wbuffer[256];
-    int wbytes = snprintf(wbuffer, 256, "to port %d\n", client.sin_port);
-
-    sendto(key->fd, wbuffer, wbytes, 0, (struct sockaddr *)&client,
-           client_length);
-}
 
 int main(int argc, char *argv[]) {
 
