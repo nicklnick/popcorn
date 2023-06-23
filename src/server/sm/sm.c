@@ -7,6 +7,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
+
+static void string_to_upper(char* str) {
+    if (str == NULL) {
+        return;
+    }
+    for (int i = 0; str[i] != '\0'; i++) {
+        str[i] = toupper((unsigned char)str[i]);
+    }
+}
 
 typedef struct state_machine {
     state current_state;
@@ -136,6 +146,8 @@ StateFunc func_table[4] = {
 };
 
 int dispatch(state_machine *self, session_ptr session, char *buff, int nbytes) {
+    struct parser_event *event = get_session_event(session);
+    string_to_upper(event->command);
     return (*func_table[self->current_state])(self, session, buff, nbytes);
 }
 
