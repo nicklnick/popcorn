@@ -6,7 +6,7 @@
 - Nicolás Margenat n°62028
   
 ## Importante
-- El servidor corre en el puerto 1110. Este valor no se puede cambiar.
+- El servidor por default corre en el puerto 1110. Este valor se puede cambiar al ejecutar el server por parámetro.
 - La aplicación que implementa el protocolo Popcorn corre en el puerto 2882. Este valor no se puede cambiar.
 
 ## Compilación
@@ -17,12 +17,13 @@ Luego, los archivos generados se encontrarán dentro del directorio `./bin`.
 ### Ejecución del Server
 Para ejecutar el server se debe correr los siguientes comandos dentro del directorio `bin`:
 ```bash
-./server -d <mail_dir> -a <user>:<pass> [[-u <user>:<pass>]...]
+./server [-p <port>] -d <mail_dir> -a <user>:<pass> [[-u <user>:<pass>]...]
 ```
 donde: 
 - `d <mail_dir>` es el directorio de mails del servidor. Aquí dentro se encontrarán los directorios de los distintos usuarios.
 - `-a <user>:<pass>` es el usuario y contraseña del administrador del servidor. Estas credenciales son las que se deben mandar siempre que se manden requests con el cliente desarrollado.
 - `-u <user>:<pass>` son los distintos usuarios que hay en el servidor. En esta opción se deben incluir TODOS los usuarios que aparecen dentro del directorio mails y asignarles una contraseña.
+- `-p <port>` es el puerto donde correrá el servidor. Si no se especifica, su valor default es 1110.
 
 ### Ejecución del Client
 Para ejecutar el cliente se debe correr el siguiente comando:
