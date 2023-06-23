@@ -2,6 +2,7 @@
 #include "parser/command_parser.h"
 #include "session/session.h"
 #include "sm/sm.h"
+#include "utils/logger.h"
 #include "wrapper-functions.h"
 #include <arpa/inet.h>
 #include <netdb.h>
@@ -11,6 +12,7 @@
 #include <unistd.h>
 
 int setupIpv4ServerSocket(int port) {
+    log(INFO, "Setting up TCP IPv4 socket")
     // IPv4 address
     // INADDR_ANY  (0.0.0.0)  means any address for binding
     struct sockaddr_in addr;
@@ -30,6 +32,7 @@ int setupIpv4ServerSocket(int port) {
 }
 
 int setupIpv6ServerSocket(int port){
+    log(INFO, "Setting up TCP IPv6 socket")
 
     struct sockaddr_in6 addr;
     memset(&addr, 0, sizeof(addr));
@@ -49,6 +52,8 @@ int setupIpv6ServerSocket(int port){
 }
 
 int setup_udp_ipv4_socket(int port) {
+    log(INFO, "Setting up UDP IPv4 socket")
+
     struct sockaddr_in addr;
     memset(&addr, 0, sizeof(addr));
     addr.sin_family = AF_INET;

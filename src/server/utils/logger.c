@@ -1,5 +1,9 @@
 #include "logger.h"
 
+#define STRINGIFY_LEVEL(x)                                                     \
+    case x:                                                                    \
+        return #x;
+
 LOG_LEVEL curr_level = INFO;
 
 void set_log_level(LOG_LEVEL level) {

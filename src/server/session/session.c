@@ -8,6 +8,7 @@
 #include "../utils/general-utils.h"
 #include "../utils/stack_adt.h"
 #include "../utils/staus-codes.h"
+#include "../utils/logger.h"
 #include "../server_adt.h"
 #include <dirent.h>
 #include <stdio.h>
@@ -235,13 +236,11 @@ static char is_marked(session_ptr session, int mail_num) {
 }
 
 int mark_to_delete(session_ptr session, int mail_num) {
-    if (!IS_BETWEEN(mail_num, 0, session->client_dir->total_mails) ||is_marked(session, mail_num)
-        ) {
-        return ERROR;
-    }
+    if (is_marked(session, mail_num))
+        return STATUS_ERROR;
 
     session->client_dir->mails[mail_num - 1] = true;
-    return SUCCESS;
+    return STATUS_SUCCESS;
 }
 
 void unmark_mails(session_ptr session) {
@@ -267,6 +266,8 @@ struct retr_state * get_session_retr_state(session_ptr session){
 }
 
 void close_client_session(session_ptr session) {
+    logv(INFO, "Closing session for client with socket [%d]...", session->socket)
+
     close(session->socket);
     remove_client(session);
     free_state_machine(session->state_machine);
@@ -285,6 +286,8 @@ void close_client_session(session_ptr session) {
     free(session->client_fd_handler);
     free(session->retr_state);
     free(session);
+
+    log(INFO, "Session closed")
 }
 
 void close_client_fd_handler (struct selector_key *key){

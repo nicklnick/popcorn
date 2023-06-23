@@ -40,11 +40,12 @@
 
 #define OK_DELE        "+OK DELE: Message deleted\r\n"
 // FIXME: no such message OR messsage already deleted
-#define ERR_DELE "-ERR DELE: Maybe no such message\r\n"
+#define ERR_DELE_NOMSG   "-ERR DELE: No such message\r\n"
+#define ERR_DELE_WASDELE "-ERR DELE: Message already deleted\r\n"
 
-#define OK_NOOP  "+OK NOOP\r\n"
+#define OK_NOOP          "+OK NOOP\r\n"
 
-#define OK_RSET  "+OK RSET\r\n"
+#define OK_RSET          "+OK RSET\r\n"
 
 // UPDATE
 #define OK_QUIT               "+OK QUIT\r\n"

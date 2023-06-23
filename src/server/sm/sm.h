@@ -13,7 +13,7 @@ typedef enum state {
 
 typedef struct state_machine *state_machine_ptr;
 
-state_machine_ptr new_state_machine();
+state_machine_ptr new_state_machine(void);
 
 /**
  * @param state_machine Contains current state

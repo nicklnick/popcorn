@@ -26,7 +26,7 @@ int get_ipv6_server_socket(void);
 
 char *get_mail_dir_path(void);
 
-void close_server();
+void close_server(void);
 
 struct fd_handler *get_server_sock_fd_handler(void);
 
