@@ -3,6 +3,8 @@
 #include "pop3-messages.h"
 #include "server_adt.h"
 #include "utils/file-utils.h"
+#include "utils/general-utils.h"
+#include "utils/logger.h"
 #include "utils/staus-codes.h"
 #include "wrapper-functions.h"
 #include <dirent.h>
@@ -23,6 +25,8 @@ int auth_user_command(session_ptr session, char *arg, int arg_len,
 
     // User does not exist
     if (user_dir == NULL) {
+        logv(DEBUG, "User [%s] does not exist", arg)
+
         int len = strlen(ERR_USER);
         strncpy(response_buff, ERR_USER, len);
         return len;
@@ -41,25 +45,33 @@ int auth_pass_command(session_ptr session, char *arg, int arg_len,
     pop_action_state(session);
 
     // TODO: check this
+    // Should not happen
     char username[NAME_MAX] = {0};
     int username_len = get_username(session, username);
     if (username_len <= 0) {
-        int len = strlen(ERR_PASS_VALID);
-        strncpy(response_buff, ERR_PASS_VALID, len);
+        logv(ERROR, "User [%s] does not exist, but existed", username)
+
+        int len = strlen(ERR_USER);
+        strncpy(response_buff, ERR_USER, len);
         *change_status = false;
         return len;
     }
 
+    // Unable to lock mailbox
     struct user_dir *user_dir = get_user_dir(username, username_len);
-
     if (user_dir->is_open) {
+        log(DEBUG, "Unable to lock mailbox")
+
         int len = strlen(ERR_PASS_LOCK);
         strncpy(response_buff, ERR_PASS_LOCK, len);
         *change_status = false;
         return len;
     }
 
+    // Invalid password
     if (strcmp(user_dir->password, arg) != 0) {
+        log(DEBUG, "Invalid password")
+
         int len = strlen(ERR_PASS_VALID);
         strncpy(response_buff, ERR_PASS_VALID, len);
         return len;
@@ -74,8 +86,9 @@ int auth_pass_command(session_ptr session, char *arg, int arg_len,
     strncat(mail_dir, username, username_len);
 
     DIR *client_dir = opendir(mail_dir);
-    if (client_dir == NULL)
-        perror("auth_pass_command()");
+    if (client_dir == NULL) {
+        log(ERROR, "auth_pass_command()")
+    }
     set_client_dir_pt(session, client_dir);
 
     int len = strlen(OK_PASS);
@@ -84,10 +97,13 @@ int auth_pass_command(session_ptr session, char *arg, int arg_len,
     return len;
 }
 
+/**
+ * @return 0 if stat failed, file_size otherwise
+ */
 static ssize_t get_file_size(const char *mail_dir, const char *filename) {
     struct stat st;
-    int mail_len = strlen(mail_dir);
-    int file_len = strlen(filename);
+    int mail_len = (int)strlen(mail_dir);
+    int file_len = (int)strlen(filename);
     char *file_path =
         (char *)_calloc(mail_len + 1 + file_len + 1, sizeof(char));
 
@@ -97,8 +113,8 @@ static ssize_t get_file_size(const char *mail_dir, const char *filename) {
     if (stat(file_path, &st) < 0) {
         free(file_path);
 
-        perror("stat()");
-        exit(EXIT_FAILURE);
+        log(ERROR, "stat()")
+        return 0;
     }
     free(file_path);
 
@@ -111,7 +127,7 @@ static void get_file_stats(DIR *dir, int *count, int *total_bytes,
     while ((entry = readdir(dir)) != NULL) {
         if (entry->d_type == DT_REG) {
             *count += 1;
-            *total_bytes += get_file_size(base_path, entry->d_name);
+            *total_bytes += (int)get_file_size(base_path, entry->d_name);
         }
     }
 }
@@ -120,12 +136,11 @@ int transaction_stat_command(session_ptr session, char *arg, int arg_len,
                              char *response_buff) {
     pop_action_state(session);
 
-    // get mail_dir
+    // Get mail_dir
     char username[NAME_MAX] = {0};
     int username_len = get_username(session, username);
     if (username_len < 0) {
-        printf("Error getting username");
-        exit(EXIT_FAILURE);
+        logv(FATAL, "Unable to locate user [%s]", username)
     }
     char mail_dir[MAILPATH_MAX] = {0};
     strcpy(mail_dir, get_mail_dir_path());
@@ -134,10 +149,10 @@ int transaction_stat_command(session_ptr session, char *arg, int arg_len,
 
     DIR *client_dir = opendir(mail_dir);
     if (!client_dir) {
-        printf("error opening client directory");
-        exit(EXIT_FAILURE);
+        logv(FATAL, "Could not open directory for user [%s]", username)
     }
 
+    // Count files and total bytes across files
     int file_count = 0, size_bytes = 0;
     struct dirent *entry;
     int *client_mails = get_client_dir_mails(session);
@@ -156,7 +171,7 @@ int transaction_stat_command(session_ptr session, char *arg, int arg_len,
 
     sprintf(response_buff, "%d %d", file_count, size_bytes);
 
-    return strlen(response_buff);
+    return (int)strlen(response_buff);
 }
 
 int transaction_dele_command(session_ptr session, char *arg, int arg_len,
@@ -164,13 +179,19 @@ int transaction_dele_command(session_ptr session, char *arg, int arg_len,
 
     pop_action_state(session);
 
-    int status = mark_to_delete(session, atoi(arg));
-    if (status == ERROR) {
-        strcpy(response_buff, ERR_DELE);
-        return ERROR;
+    int mail_idx = atoi(arg);
+    if(!IS_BETWEEN(mail_idx, 0, get_client_total_mails(session))) {
+        strcpy(response_buff, ERR_DELE_NOMSG);
+        return STATUS_ERROR;
     }
 
-    return SUCCESS;
+    int status = mark_to_delete(session, mail_idx);
+    if (status == STATUS_ERROR) {
+        strcpy(response_buff, ERR_DELE_WASDELE);
+        return STATUS_ERROR;
+    }
+
+    return STATUS_SUCCESS;
 }
 
 int transaction_rset_command(session_ptr session, char *arg, int arg_len,
@@ -179,7 +200,7 @@ int transaction_rset_command(session_ptr session, char *arg, int arg_len,
     pop_action_state(session);
 
     unmark_mails(session);
-    return SUCCESS;
+    return STATUS_SUCCESS;
 }
 
 int transaction_list_command(session_ptr session, char *arg, int arg_len,
@@ -191,6 +212,7 @@ int transaction_list_command(session_ptr session, char *arg, int arg_len,
     long msg;
     struct dirent *client_dirent;
 
+    // Build user mail path
     char mail_path[MAILPATH_MAX] = {0};
     char username[NAME_MAX] = {0};
     int username_len = get_username(session, username);
@@ -209,6 +231,7 @@ int transaction_list_command(session_ptr session, char *arg, int arg_len,
         client_dirent = readdir_files(client_dir, msg);
 
         if (client_dirent == NULL || msg == 0) {
+            log(DEBUG, "No such message")
             return sprintf(response_buff, "%s", ERR_LIST);
         }
 
@@ -221,7 +244,6 @@ int transaction_list_command(session_ptr session, char *arg, int arg_len,
     int current_line_len = 0;
     char aux_buf[RESPONSE_LEN] = {0};
     long last_dir;
-
     if (current == PROCESS) {
         rewinddir(client_dir);
         int total = 0, count = 0;
@@ -238,7 +260,6 @@ int transaction_list_command(session_ptr session, char *arg, int arg_len,
     int i = get_client_dir_pt_index(session);
     last_dir = telldir(client_dir);
     client_dirent = readdir(client_dir);
-
     while (total_len + current_line_len < buffsize && (client_dirent != NULL)) {
 
         if (client_dirent->d_type == DT_DIR) {
@@ -287,6 +308,8 @@ int transaction_retr_command(session_ptr session, char *arg, int arg_len,
 
     // arg_len has number + '\0'
     if (arg_len <= 1) {
+        log(DEBUG, "RETR received no argument")
+
         return sprintf(response_buff, ERR_COMMAND);
     }
 
@@ -297,6 +320,7 @@ int transaction_retr_command(session_ptr session, char *arg, int arg_len,
 
     struct dirent *client_dirent;
 
+    // Build user mail path
     char mail_path[MAILPATH_MAX] = {0};
     char username[NAME_MAX] = {0};
     int username_len = get_username(session, username);
@@ -313,6 +337,7 @@ int transaction_retr_command(session_ptr session, char *arg, int arg_len,
     }
 
     if (client_dirent == NULL) {
+        log(DEBUG, "Could not find message")
         return sprintf(response_buff, ERR_RETR);
     }
 
@@ -412,8 +437,9 @@ int transaction_quit_command(session_ptr session) {
             strcat(mail_path, client_dirent->d_name);
 
             int result = remove(mail_path);
-            if (result == -1)
-                perror("transaction_quit_command()");
+            if (result == -1) {
+                log(ERROR, "transaction_quit_command()")
+            }
         }
         i++;
     }

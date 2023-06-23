@@ -1,6 +1,7 @@
 #include "server_adt.h"
 #include "selector/selector.h"
 #include "session/session.h"
+#include "utils/logger.h"
 #include "wrapper-functions.h"
 #include <dirent.h>
 #include <stdbool.h>
@@ -12,15 +13,6 @@
 #define PORT            1110
 
 #define ARRAY_INCREMENT 2
-
-#define handle_exit(format, ...)                                               \
-    {                                                                          \
-        fprintf(stderr, "popcorn: ");                                          \
-        fprintf(stderr, format, __VA_ARGS__);                                  \
-        fprintf(stderr, "\n");                                                 \
-        close_server();                                                        \
-        exit(1);                                                               \
-    }
 
 typedef struct client_node {
     session_ptr client;
@@ -47,14 +39,14 @@ struct server {
 
 struct server *server = NULL;
 
-static void register_user_pass(int argc, char *argv[]) {
-    if (argc == 0) {
-        handle_exit("Format is %s user:password", "-u")
+static void register_user_pass(int argc, char *argv[]){
+    if (argc == 0){
+        log(FATAL, "Format is -u user:password")
     }
-    const char *delimiter = ":";
-    char *username = strtok(argv[0], delimiter);
-    if (username == NULL) {
-        handle_exit("Format is %s user:password", "-u")
+    const char * delimiter = ":";
+    char * username = strtok(argv[0], delimiter);
+    if (username == NULL){
+        log(FATAL, "Format is -u user:password")
     }
     int user_index = -1;
     for (int i = 0; i < server->users_count; i++) {
@@ -62,26 +54,25 @@ static void register_user_pass(int argc, char *argv[]) {
             user_index = i;
         }
     }
-    if (user_index == -1) {
-        handle_exit("No directory matches username \"%s\"", username)
+    if (user_index == -1){
+        logv(FATAL, "No directory matches username \"%s\"", username)
     }
-    char *password = strtok(NULL, delimiter);
-    if (password == NULL) {
-        handle_exit("No password provided for username \"%s\"", username)
+    char * password = strtok(NULL, delimiter);
+    if (password == NULL){
+        logv(FATAL, "No password provided for username \"%s\"", username)
     }
-    if (strlen(password) >= 16) {
-        handle_exit(
-            "Password for username \"%s\" is too long (16 characters max)",
-            username)
+    if (strlen(password) >= 16){
+        logv(FATAL, "Password for username \"%s\" is too long (16 characters max)", username)
     }
     strcpy(server->users_dir[user_index]->password, password);
 }
 
 static void init_users_dir(char *root_path) {
+    log(INFO, "Initializing users_dir")
+
     DIR *mail_dir = opendir(root_path);
     if (mail_dir == NULL) {
-        perror("opendir()");
-        exit(1);
+        log(FATAL, "opendir()")
     }
 
     server->root_path = root_path;
@@ -123,18 +114,16 @@ struct server *init_server(int argc, char *argv[]) {
     if (server != NULL)
         return server;
 
-    if (argc <= 1) {
-        fprintf(stderr, "popcorn: Missing mail directory and users\n");
-        fprintf(stderr, "Usage: ./popcorn -d mail_path -u user:password [-u "
-                        "user:password]...\n");
-        exit(1);
+    if (argc <= 1){
+        log(FATAL, "popcorn: Missing mail directory and users\n"
+                   "Usage: ./popcorn -d mail_path -u user:password [-u user:password]...\n");
     }
 
     int ipv4_server_sock = setupIpv4ServerSocket(PORT);
     int ipv6_server_sock = setupIpv6ServerSocket(PORT);
 
     if (ipv4_server_sock < 0) {
-        perror(SETUP_SERVER_SOCKET_ERROR);
+        log(ERROR, SETUP_SERVER_SOCKET_ERROR)
         return NULL;
     }
 
@@ -158,32 +147,34 @@ struct server *init_server(int argc, char *argv[]) {
             if (!mail_dir_set) {
                 argc--;
                 argv++;
-                if (argc == 0) {
-                    handle_exit("%s: Format is %s mail_path", "-d", "-d")
+                if (argc == 0){
+                    logv(FATAL, "%s: Format is %s mail_path", "-d", "-d")
                 }
                 init_users_dir(argv[0]);
                 mail_dir_set = true;
-            } else {
-                handle_exit("%s: Mail directory already set", "-d");
             }
-        } else if (strcmp(argv[0], "-u") == 0) {
-            if (!mail_dir_set) {
-                handle_exit("%s: Mail directory needs to be specified first",
-                            "-d")
+            else{
+                logv(FATAL, "%s: Mail directory already set", "-d");
+            }
+        }
+        else if (strcmp(argv[0], "-u") == 0){
+            if (!mail_dir_set){
+                logv(FATAL, "%s: Mail directory needs to be specified first", "-d")
             }
             argc--;
             argv++;
             register_user_pass(argc, argv);
             registered_users_count++;
-        } else {
-            handle_exit("Invalid command \"%s\"", argv[0]);
+        }
+        else {
+            logv(FATAL, "Invalid command \"%s\"", argv[0])
         }
         argv++;
         argc--;
     }
 
-    if (registered_users_count < server->users_count) {
-        handle_exit("%s: Missing passwords for mail directory", "-u")
+    if (registered_users_count < server->users_count){
+        logv(FATAL, "%s: Missing passwords for mail directory", "-u")
     }
 
     return server;
@@ -259,6 +250,7 @@ int add_client(session_ptr client) {
     if (current == NULL) {
         current = malloc(sizeof(client_node));
         if (current == NULL) {
+            log(ERROR, "malloc()")
             return -1;
         }
         current->next = NULL;
@@ -276,6 +268,7 @@ int add_client(session_ptr client) {
     }
     current = malloc(sizeof(client_node));
     if (current == NULL) {
+        log(ERROR, "malloc()")
         return -1;
     }
     current->next = NULL;
@@ -332,9 +325,9 @@ static void free_clients(void) {
     }
 }
 
-void close_server() {
-    if (server == NULL)
-        return;
+void close_server(void) {
+    if(server == NULL)
+        return ;
     close(server->ipv4_server_sock);
     close(server->ipv6_server_sock);
     free_clients();

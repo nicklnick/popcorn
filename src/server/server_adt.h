@@ -34,7 +34,7 @@ unsigned long get_transferred_bytes(void);
 
 void add_transferred_bytes(unsigned int nbytes);
 
-void close_server();
+void close_server(void);
 
 struct fd_handler *get_server_sock_fd_handler(void);
 

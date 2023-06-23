@@ -53,8 +53,15 @@ int get_client_dir_pt_index(session_ptr session);
 
 void set_client_dir_pt_index(session_ptr session, int index);
 
+/**
+ * @return mail[] with client mails,
+ * if mail[i] == 1 then message i was deleted
+ */
 int *get_client_dir_mails(session_ptr session);
 
+/**
+ * @return amount of mails for current client
+ */
 int get_client_total_mails(session_ptr session);
 
 fd_handler *get_fd_handler(session_ptr session);
@@ -73,6 +80,8 @@ void push_action_state(session_ptr session, action_state action);
  * @param session
  * @param mail_num Mail to be deleted
  * @return 0 on success, -1 on error
+ *
+ * @note It is the caller´s duty to check if mail_num is valid
  */
 int mark_to_delete(session_ptr session, int mail_num);
 
