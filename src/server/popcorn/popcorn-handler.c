@@ -33,7 +33,7 @@ void popcorn_read(struct selector_key *key) {
            request->version, request->username, request->password,
            request->req_id, request->command);
 
-    popcorn_response *response = malloc(sizeof(popcorn_response));
+    popcorn_response *response = calloc(1, sizeof(popcorn_response));
     if (response == NULL) {
         printf("Error");
         return;
@@ -42,11 +42,15 @@ void popcorn_read(struct selector_key *key) {
     handle_request(request, response);
 
     char wbuffer[256];
-    int wbytes = snprintf(wbuffer, 256,
-                          "popcorn\r\nversion: %d\r\nreq-id: %d\r\nstatus: "
-                          "%d\r\nvalue: %s\r\n",
-                          response->version, response->req_id, response->status,
-                          response->value);
+    int wbytes =
+        snprintf(wbuffer, 256,
+                 "popcorn\r\nversion: %d\r\nreq-id: %d\r\nstatus: "
+                 "%d\r\n",
+                 response->version, response->req_id, response->status);
+
+    if (response->value[0] != '\0')
+        snprintf(wbuffer + wbytes, 256 - wbytes, "value: %s\r\n",
+                 response->value);
 
     printf("RESPONSE SENT\n%s", wbuffer);
 
