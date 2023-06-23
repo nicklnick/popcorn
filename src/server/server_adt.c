@@ -43,19 +43,19 @@ struct server *server = NULL;
 
 static void register_user_admin(int argc, char *argv[]) {
     if (argc == 0) {
-        log(FATAL, "-a: Usage: -a user:password")
+        log(FATAL, "-a: Usage: -a <user>:<password>")
     }
     const char *delimiter = ":";
     char *username = strtok(argv[0], delimiter);
     if (username == NULL) {
-        log(FATAL, "-a: Usage: -a user:password")
+        log(FATAL, "-a: Usage: -a <user>:<password>")
     }
     if (strlen(username) >= 16) {
         log(FATAL, "-a: Username is too long (16 characters max)")
     }
     char *password = strtok(NULL, delimiter);
     if (password == NULL) {
-        log(FATAL, "Usage: -a user:password")
+        log(FATAL, "Usage: -a <user>:<password>")
     }
     if (strlen(password) >= 16) {
         log(FATAL, "-a: Password for username is too long (16 characters max)")
@@ -65,12 +65,12 @@ static void register_user_admin(int argc, char *argv[]) {
 
 static void register_user_pass(int argc, char *argv[]) {
     if (argc == 0) {
-        log(FATAL, "Format is -u user:password")
+        log(FATAL, "-u: Format is -u <user>:<password>")
     }
     const char *delimiter = ":";
     char *username = strtok(argv[0], delimiter);
     if (username == NULL) {
-        log(FATAL, "Format is -u user:password")
+        log(FATAL, "-u: Format is -u <user>:<password>")
     }
     int user_index = -1;
     for (int i = 0; i < server->users_count; i++) {
@@ -79,15 +79,15 @@ static void register_user_pass(int argc, char *argv[]) {
         }
     }
     if (user_index == -1) {
-        logv(FATAL, "No directory matches username \"%s\"", username)
+        logv(FATAL, "-u: No directory matches username \"%s\"", username)
     }
     char *password = strtok(NULL, delimiter);
     if (password == NULL) {
-        logv(FATAL, "No password provided for username \"%s\"", username)
+        logv(FATAL, "-u: No password provided for username \"%s\"", username)
     }
     if (strlen(password) >= 16) {
         logv(FATAL,
-             "Password for username \"%s\" is too long (16 characters max)",
+             "-u: Password for username \"%s\" is too long (16 characters max)",
              username)
     }
     strcpy(server->users_dir[user_index]->password, password);
@@ -95,7 +95,7 @@ static void register_user_pass(int argc, char *argv[]) {
 
 static int register_port(int argc, char * argv[]){
     if (argc == 0){
-        log(FATAL, "Format is -p <port>");
+        log(FATAL, "-p: Format is -p <port>");
     }
     return atoi(argv[0]);
 }
@@ -148,8 +148,8 @@ struct server *init_server(int argc, char *argv[]) {
         return server;
 
     if (argc <= 1) {
-        log(FATAL, "popcorn: Missing mail directory and users\n"
-                   "Usage: ./popcorn -d mail_path -u user:password [-u "
+        log(FATAL, "Missing mail directory and users\n"
+                   "Usage: ./server [-p <port>] -d <mail_path> -a <user:password> -u <user:password> [-u "
                    "user:password]...\n");
     }
     int server_port = PORT;
@@ -208,7 +208,7 @@ struct server *init_server(int argc, char *argv[]) {
         } 
         else if (strcmp(argv[0], "-p") == 0){
             if (port_set){
-                logv(FATAL, "%s: port was already specified", "-p")
+                logv(FATAL, "%s: Port was already specified", "-p")
             }
             port_set = true;
             argc--;
@@ -222,6 +222,15 @@ struct server *init_server(int argc, char *argv[]) {
         argc--;
     }
 
+    
+    if (registered_users_count < server->users_count) {
+        logv(FATAL, "%s: Missing passwords for mail directory", "-u")
+    }
+
+    if (!admin_set){
+        logv(FATAL, "%s: Missing admin user for monitoring protocol", "-a")
+    }
+    
     int ipv4_server_sock = setupIpv4ServerSocket(server_port);
     int ipv6_server_sock = setupIpv6ServerSocket(server_port);
 
@@ -230,10 +239,6 @@ struct server *init_server(int argc, char *argv[]) {
 
     if (ipv4_server_sock < 0) {
         log(ERROR, SETUP_SERVER_SOCKET_ERROR) return NULL;
-    }
-
-    if (registered_users_count < server->users_count) {
-        logv(FATAL, "%s: Missing passwords for mail directory", "-u")
     }
 
     return server;
