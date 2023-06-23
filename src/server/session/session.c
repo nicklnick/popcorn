@@ -274,8 +274,6 @@ void close_client_session(session_ptr session) {
     remove_client(session);
     free_state_machine(session->state_machine);
     command_parser_destroy(session->command_parser);
-    // FIXME: Tirar error porque el comand_parser retorna su propio event
-    // entonces ya fue liberado. free(session->event);
     free_stack_adt(session->action_stack);
 
     struct user_dir * user_d = get_user_dir(session->username, strlen(session->username));

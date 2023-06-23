@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#define MAX_RESPONSE_LENGTH 128
+#define MAX_RESPONSE_LENGTH 256
 
 typedef void (*command_function)(char *argument1, char *argument2,
                                  popcorn_response *response);
@@ -13,21 +13,23 @@ typedef void (*command_function)(char *argument1, char *argument2,
 void popcorn_get_bytes(char *argument1, char *argument2,
                        popcorn_response *response) {
     unsigned long transferred_bytes_count = get_transferred_bytes();
-    snprintf(response->value, 256, "%ld", transferred_bytes_count);
+    snprintf(response->value, MAX_RESPONSE_LENGTH, "%ld",
+             transferred_bytes_count);
     response->status = OK;
 }
 
 void popcorn_get_current(char *argument1, char *argument2,
                          popcorn_response *response) {
     int current_clients_count = get_clients_count();
-    snprintf(response->value, 256, "%d", current_clients_count);
+    snprintf(response->value, MAX_RESPONSE_LENGTH, "%d", current_clients_count);
     response->status = OK;
 }
 
 void popcorn_get_history(char *argument1, char *argument2,
                          popcorn_response *response) {
     int historic_clients_count = get_historic_client_count();
-    snprintf(response->value, 256, "%d", historic_clients_count);
+    snprintf(response->value, MAX_RESPONSE_LENGTH, "%d",
+             historic_clients_count);
     response->status = OK;
 }
 
@@ -82,8 +84,14 @@ void popcorn_delete_user(char *argument1, char *argument2,
         return;
     }
 
+    if (user_dir->removed) {
+        response->status = SERVER_ERROR;
+        return;
+    }
+
     if (delete_user_dir(username, strlen(username)) == 0) {
         response->status = OK;
+        user_dir->removed = true;
         return;
     }
 

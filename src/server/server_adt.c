@@ -13,7 +13,7 @@
 #include <unistd.h>
 
 #define PORT                   1110
-#define MAX_CONCURRENT_CLIENTS 2
+#define MAX_CONCURRENT_CLIENTS 500
 #define ARRAY_INCREMENT        2
 
 typedef struct client_node {

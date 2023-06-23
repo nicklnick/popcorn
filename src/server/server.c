@@ -15,7 +15,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#define MAX_CURRENT_CLIENTS 500
+#define MAX_SELECTOR_FDS 500
 
 static bool done = false;
 
@@ -58,7 +58,6 @@ int main(int argc, char *argv[]) {
         int popcorn_ipv6_socket = get_popcorn_ipv6_server_sock();
     logv(INFO, "Got [%d] Popcorn UDP IPv6 server sock", popcorn_ipv6_socket)
 
-        // FIXME
         set_popcorn_sock_handlers(&popcorn_read, NULL);
     struct fd_handler *popcorn_sock_handler = malloc(sizeof(struct fd_handler));
     memcpy((void *)popcorn_sock_handler, get_popcorn_sock_fd_handler(),
@@ -113,7 +112,7 @@ static fd_selector server_init_selector(int ipv4_server_sock,
         log(ERROR, "selector_fd_set_nio()")
     }
 
-    fd_selector selector = selector_new(1024);
+    fd_selector selector = selector_new(MAX_SELECTOR_FDS);
     selector_register(selector, ipv4_server_sock, server_sock_handler, OP_READ,
                       NULL);
 

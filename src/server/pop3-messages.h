@@ -17,8 +17,6 @@
 #define ERR_PASS_LOCK  "-ERR PASS: unable to lock mailbox\r\n"
 
 // TRANSACTION
-// FIXME: Remove extra messages where it is not appropriate
-
 #define STAT           "STAT"
 #define LIST           "LIST"
 #define RETR           "RETR"
@@ -39,7 +37,6 @@
 #define ERR_RETR       "-ERR RETR: No such message\r\n"
 
 #define OK_DELE        "+OK DELE: Message deleted\r\n"
-// FIXME: no such message OR messsage already deleted
 #define ERR_DELE_NOMSG   "-ERR DELE: No such message\r\n"
 #define ERR_DELE_WASDELE "-ERR DELE: Message already deleted\r\n"
 
