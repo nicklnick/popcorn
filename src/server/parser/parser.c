@@ -7,7 +7,6 @@
 #include "parser.h"
 
 struct parser {
-    // TODO: probably remove classes in the future
     const unsigned     *classes;
     const struct parser_definition *def;
 
@@ -41,7 +40,6 @@ parser_reset(struct parser *p) {
 }
 
 struct parser_event * parser_feed(struct parser *p, const uint8_t c) {
-    // TODO: probably remove this
     const unsigned type = p->classes[c];
     
     const struct parser_state_transition *state = p->def->states[p->state];

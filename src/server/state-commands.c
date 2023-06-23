@@ -44,7 +44,6 @@ int auth_pass_command(session_ptr session, char *arg, int arg_len,
 
     pop_action_state(session);
 
-    // TODO: check this
     // Should not happen
     char username[NAME_MAX] = {0};
     int username_len = get_username(session, username);

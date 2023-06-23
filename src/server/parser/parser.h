@@ -16,7 +16,6 @@
 struct parser_event {
     unsigned type;
 
-    // TODO: change this
     char command[COMMAND_SIZE];
     int cmd_len;
     char argument1[ARGUMENT_SIZE];
@@ -60,7 +59,6 @@ struct parser_event *parser_feed(struct parser *p, const uint8_t c);
 
 static const unsigned ANY = 1 << 9;
 
-// TODO: probably remove this
 const unsigned *parser_no_classes(void);
 
 struct parser_event *get_parser_event(struct parser *parser);

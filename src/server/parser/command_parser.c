@@ -9,8 +9,6 @@
 #define N(x) (sizeof(x) / sizeof((x)[0]))
 
 /** Actions for each transition */
-// TODO: try to make this generic.
-// TODO: validate length of commands and arguments
 static void copy_command(struct parser_event *ret, const uint8_t c) {
     ret->type = MAY_VALID;
     ret->command[ret->index++] = c;
