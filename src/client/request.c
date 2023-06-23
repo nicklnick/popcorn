@@ -209,28 +209,28 @@ struct request *get_request_struct(int version, int argc, char *argv[]) {
     return request;
 }
 
-void get_request(char *buffer, struct request *request) {
-    strcpy(buffer, "popcorn\r\n");
-    strcat(buffer, "version: ");
-    strcat(buffer, "1");
-    strcat(buffer, "\r\n");
-    strcat(buffer, "auth: ");
-    strcat(buffer, request->username);
-    strcat(buffer, ":");
-    strcat(buffer, request->password);
-    strcat(buffer, "\r\n");
-    strcat(buffer, "req-id: ");
-    strcat(buffer, "1");
-    strcat(buffer, "\r\n");
-    strcat(buffer, "command: ");
-    strcat(buffer, request->command);
-    if (request->argument1 != NULL) {
-        strcat(buffer, " ");
-        strcat(buffer, request->argument1);
-    }
-    if (request->argument2 != NULL) {
-        strcat(buffer, " ");
-        strcat(buffer, request->argument2);
-    }
-    strcat(buffer, "\r\n");
+void get_request(char * buffer, struct request * request){
+  strcpy(buffer, "popcorn\r\n");
+  strcat(buffer, "version: ");
+  strcat(buffer, "1");
+  strcat(buffer, "\r\n");
+  strcat(buffer, "auth: ");
+  strcat(buffer, request->username);
+  strcat(buffer, ":");
+  strcat(buffer, request->password);
+  strcat(buffer, "\r\n");
+  strcat(buffer, "req-id: ");
+  strcat(buffer, "1");
+  strcat(buffer, "\r\n");
+  strcat(buffer, "command: ");
+  strcat(buffer, request->command);
+  if (request->argument1[0] != '\0'){
+    strcat(buffer, " ");
+    strcat(buffer, request->argument1);
+  }
+  if (request->argument2[0] != '\0'){
+    strcat(buffer, " ");
+    strcat(buffer, request->argument2);
+  }
+  strcat(buffer, "\r\n");
 }

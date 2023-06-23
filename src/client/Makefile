@@ -1,4 +1,4 @@
-include Makefile.inc
+include ../../Makefile.inc
 
 # Source files
 SRCS := $(shell find . -name "*.c")
