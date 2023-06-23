@@ -56,6 +56,7 @@ mail
 El proyecto se estructura de la siguiente manera.
 ```bash
 popcorn
+├── docs
 └── src
     ├── client
     └── server
@@ -68,6 +69,7 @@ popcorn
         └── utils
 ```
 - Dentro de `src` se encuentra todo el código fuente.
+- `docs` contiene el informe del trabajo.
 - `client` contiene el código desarrollado para la aplicación cliente.
 - `server` contiene todo el código relacionado con el servidor.
     - `buffer` contiene el buffer de escritura/lectura provisto por la cátedra.
