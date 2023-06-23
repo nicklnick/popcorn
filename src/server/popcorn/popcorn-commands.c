@@ -1,4 +1,5 @@
 #include "popcorn-commands.h"
+#include "../server_adt.h"
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
@@ -10,17 +11,20 @@ typedef void (*command_function)(char *argument1, char *argument2,
 
 void popcorn_get_bytes(char *argument1, char *argument2,
                        popcorn_response *response) {
-    puts("popcorn_get_bytes");
+    int transferred_bytes_count = get_transferred_bytes();
+    snprintf(response->value, 256, "%d", transferred_bytes_count);
 }
 
 void popcorn_get_current(char *argument1, char *argument2,
                          popcorn_response *response) {
-    snprintf(response->value, 256, "%d", 10);
+    int current_clients_count = get_clients_count();
+    snprintf(response->value, 256, "%d", current_clients_count);
 }
 
 void popcorn_get_history(char *argument1, char *argument2,
                          popcorn_response *response) {
-    puts("popcorn_get_history");
+    int historic_clients_count = get_historic_client_count();
+    snprintf(response->value, 256, "%d", historic_clients_count);
 }
 
 void popcorn_change_password(char *argument1, char *argument2,

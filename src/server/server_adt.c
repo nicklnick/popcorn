@@ -3,24 +3,24 @@
 #include "session/session.h"
 #include "wrapper-functions.h"
 #include <dirent.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <stdbool.h>
 
 #define PORT            1110
 
-#define ARRAY_INCREMENT 2        
+#define ARRAY_INCREMENT 2
 
-#define handle_exit(format, ...)                                          \
-	{                                                                     \
-        fprintf(stderr, "popcorn: ");                                     \
-		fprintf(stderr, format, __VA_ARGS__);                             \
-		fprintf(stderr, "\n");                                            \
-        close_server();                                                   \
-		exit(1);                                                          \
-	}             
+#define handle_exit(format, ...)                                               \
+    {                                                                          \
+        fprintf(stderr, "popcorn: ");                                          \
+        fprintf(stderr, format, __VA_ARGS__);                                  \
+        fprintf(stderr, "\n");                                                 \
+        close_server();                                                        \
+        exit(1);                                                               \
+    }
 
 typedef struct client_node {
     session_ptr client;
@@ -39,6 +39,7 @@ struct server {
     client_node *clients;
     int clients_count;
 
+    int transferred_bytes_count;
     int historic_client_count;
 
     struct fd_handler *server_sock_handler;
@@ -46,30 +47,32 @@ struct server {
 
 struct server *server = NULL;
 
-static void register_user_pass(int argc, char *argv[]){
-    if (argc == 0){
+static void register_user_pass(int argc, char *argv[]) {
+    if (argc == 0) {
         handle_exit("Format is %s user:password", "-u")
     }
-    const char * delimiter = ":";
-    char * username = strtok(argv[0], delimiter);
-    if (username == NULL){
+    const char *delimiter = ":";
+    char *username = strtok(argv[0], delimiter);
+    if (username == NULL) {
         handle_exit("Format is %s user:password", "-u")
     }
     int user_index = -1;
-    for (int i=0; i < server->users_count; i++){
-        if (strcmp(server->users_dir[i]->username, username) == 0){
+    for (int i = 0; i < server->users_count; i++) {
+        if (strcmp(server->users_dir[i]->username, username) == 0) {
             user_index = i;
         }
     }
-    if (user_index == -1){
+    if (user_index == -1) {
         handle_exit("No directory matches username \"%s\"", username)
     }
-    char * password = strtok(NULL, delimiter);
-    if (password == NULL){
+    char *password = strtok(NULL, delimiter);
+    if (password == NULL) {
         handle_exit("No password provided for username \"%s\"", username)
     }
-    if (strlen(password) >= 16){
-        handle_exit("Password for username \"%s\" is too long (16 characters max)", username)
+    if (strlen(password) >= 16) {
+        handle_exit(
+            "Password for username \"%s\" is too long (16 characters max)",
+            username)
     }
     strcpy(server->users_dir[user_index]->password, password);
 }
@@ -120,9 +123,10 @@ struct server *init_server(int argc, char *argv[]) {
     if (server != NULL)
         return server;
 
-    if (argc <= 1){
+    if (argc <= 1) {
         fprintf(stderr, "popcorn: Missing mail directory and users\n");
-        fprintf(stderr, "Usage: ./popcorn -d mail_path -u user:password [-u user:password]...\n");
+        fprintf(stderr, "Usage: ./popcorn -d mail_path -u user:password [-u "
+                        "user:password]...\n");
         exit(1);
     }
 
@@ -149,38 +153,36 @@ struct server *init_server(int argc, char *argv[]) {
     argc--;
     bool mail_dir_set = false;
     int registered_users_count = 0;
-    while (argc > 0){
-        if (strcmp(argv[0], "-d") == 0){
-            if (!mail_dir_set){
+    while (argc > 0) {
+        if (strcmp(argv[0], "-d") == 0) {
+            if (!mail_dir_set) {
                 argc--;
                 argv++;
-                if (argc == 0){
+                if (argc == 0) {
                     handle_exit("%s: Format is %s mail_path", "-d", "-d")
                 }
                 init_users_dir(argv[0]);
                 mail_dir_set = true;
-            }
-            else{
+            } else {
                 handle_exit("%s: Mail directory already set", "-d");
             }
-        }
-        else if (strcmp(argv[0], "-u") == 0){
-            if (!mail_dir_set){
-                handle_exit("%s: Mail directory needs to be specified first", "-d")
+        } else if (strcmp(argv[0], "-u") == 0) {
+            if (!mail_dir_set) {
+                handle_exit("%s: Mail directory needs to be specified first",
+                            "-d")
             }
             argc--;
             argv++;
             register_user_pass(argc, argv);
             registered_users_count++;
-        }
-        else {
+        } else {
             handle_exit("Invalid command \"%s\"", argv[0]);
         }
         argv++;
         argc--;
     }
 
-    if (registered_users_count < server->users_count){
+    if (registered_users_count < server->users_count) {
         handle_exit("%s: Missing passwords for mail directory", "-u")
     }
 
@@ -195,8 +197,8 @@ int get_ipv6_server_socket(void) {
     return server->ipv6_server_sock;
 }
 
-struct user_dir * get_user_dir(char * username, int len){
-    if(server == NULL)
+struct user_dir *get_user_dir(char *username, int len) {
+    if (server == NULL)
         return NULL;
 
     int i = 0;
@@ -215,6 +217,18 @@ struct user_dir * get_user_dir(char * username, int len){
 
 char *get_mail_dir_path(void) {
     return server->root_path;
+}
+
+unsigned int get_historic_client_count(void) {
+    return server->historic_client_count;
+}
+
+unsigned int get_clients_count(void) {
+    return server->clients_count;
+}
+
+void add_transferred_bytes(unsigned int nbytes) {
+    return server->transferred_bytes_count += nbytes;
 }
 
 struct fd_handler *get_server_sock_fd_handler(void) {
@@ -238,6 +252,7 @@ int add_client(session_ptr client) {
         current->client = client;
         server->clients = current;
         server->clients_count++;
+        server->historic_client_count++;
         return 0;
     }
 
@@ -254,27 +269,28 @@ int add_client(session_ptr client) {
     prev->next = current;
     current->client = client;
     server->clients_count++;
+    server->historic_client_count++;
     return 0;
 }
 
-int remove_client(session_ptr client){
-    if(server == NULL)
+int remove_client(session_ptr client) {
+    if (server == NULL)
         return 0;
-    client_node * prev = server->clients;
-    if(prev == NULL){
+    client_node *prev = server->clients;
+    if (prev == NULL) {
         return -1;
     }
-    client_node * current = prev->next;
-    if(current == NULL){
-        if(prev->client == client){
+    client_node *current = prev->next;
+    if (current == NULL) {
+        if (prev->client == client) {
             server->clients = NULL;
             free(prev);
             return 0;
         }
     }
-    while(current != NULL){
-        if(current->client == client){
-            client_node * to_free = current;
+    while (current != NULL) {
+        if (current->client == client) {
+            client_node *to_free = current;
             prev->next = current->next;
             server->clients_count--;
             free(to_free);
@@ -305,12 +321,12 @@ static void free_clients(void) {
 }
 
 void close_server() {
-    if(server == NULL)
-        return ;
+    if (server == NULL)
+        return;
     close(server->ipv4_server_sock);
     close(server->ipv6_server_sock);
     free_clients();
-    if (server->users_dir != NULL){
+    if (server->users_dir != NULL) {
         free_users_dir();
     }
     free(server->server_sock_handler);

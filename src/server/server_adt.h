@@ -9,7 +9,7 @@
 typedef struct server *server_ptr;
 
 struct user_dir {
-    char username[NAME_MAX];
+    char username[16];
     char password[16];
     bool is_open;
 };
@@ -25,6 +25,14 @@ int get_ipv4_server_socket(void);
 int get_ipv6_server_socket(void);
 
 char *get_mail_dir_path(void);
+
+unsigned int get_historic_client_count(void);
+
+unsigned int get_clients_count(void);
+
+unsigned int get_transferred_bytes(void);
+
+void add_transferred_bytes(unsigned int nbytes);
 
 void close_server();
 

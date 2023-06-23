@@ -95,6 +95,7 @@ void session_read(struct selector_key *key) {
             return ;
         }
         buffer_write_adv(&session->rbuffer, bytes_recv);
+        add_transferred_bytes(bytes_recv);
     }
 
     size_t rsize = 0;
@@ -162,6 +163,7 @@ void session_send_response(struct selector_key *key) {
         buffer_read_adv(&session->wbuffer, bytes_sent);
         wbytes -= bytes_sent;
         session->wbytes = wbytes;
+        add_transferred_bytes(bytes_sent);
     }
 
     if (session->wbytes != 0) {
