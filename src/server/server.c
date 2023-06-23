@@ -32,13 +32,12 @@ void server_passive_accept(struct selector_key *key);
 
 int main(int argc, char *argv[]) {
 
-    /*close(STDIN_FILENO);
-    close(STDOUT_FILENO);*/
+    close(STDIN_FILENO);
+    close(STDOUT_FILENO);
 
     signal(SIGTERM, sigterm_handler);
     signal(SIGINT, sigterm_handler);
 
-    // obtener path mail, obtener char ** pass
     init_popcorn();
     init_server(argc, argv);
 
