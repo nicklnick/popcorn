@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define BUFFER_SIZE 1024
+
 typedef enum parser_state {
     HEADER,
     VERSION,
@@ -117,14 +119,13 @@ static int dispatch(parser_state *state, char *key, char *value,
 }
 
 int parse_response(char *response_str, popcorn_response *response) {
-    printf("parsing\n");
-    char reqbuff[256];
+    char reqbuff[BUFFER_SIZE];
     strcpy(reqbuff, response_str);
 
     char *sep = "\r\n";
     char *brk;
     char *line = strtok_r(reqbuff, sep, &brk);
-    char key[256], value[256];
+    char key[RES_COMMAND_SIZE], value[RES_VALUE_SIZE];
 
     parser_state state = HEADER;
 

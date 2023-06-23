@@ -5,7 +5,10 @@
 
 #define NAME_SIZE 16
 #define PASSWORD_SIZE 16
-#define OPTION_SIZE 32
+#define OPTION_SIZE 20
+#define COMMAND_SIZE 20
+#define ARGUMENT_SIZE 20
+
 #define TOTAL_OPTIONS 6
 
 #define SUCCESS 0

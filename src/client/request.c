@@ -5,9 +5,9 @@ struct request{
   char username[NAME_SIZE];
   char password[PASSWORD_SIZE];
   int req_id;
-  char command[20];
-  char argument1[20];
-  char argument2[20];
+  char command[COMMAND_SIZE];
+  char argument1[ARGUMENT_SIZE];
+  char argument2[ARGUMENT_SIZE];
 } request;
 
 
@@ -22,11 +22,12 @@ static void handle_help(){
   printf("POPCORN protocol client\n");
   printf("Usage: ./popcorn_client -a USER:PASSWORD COMMAND [ARGUMENT]...\n\n");
   printf("Commands:\n");
-  printf("  current\n");
-  printf("  history\n");
   printf("  bytes\n");
+  printf("  history\n");
+  printf("  current\n");
   printf("  password USER PASSWORD\n");
   printf("  delete   USER\n");
+  printf("  conc     MAX_USERS\n");
 }
 
 static int handle_auth(int argc, char *argv[], struct request * request){
@@ -84,10 +85,21 @@ static int handle_password(int argc, char ** argv, struct request * request){
     error_and_exit("password: too many arguments")
   }
 
+  char * username = argv[0];
+  char * password = argv[1];
+
+  if (strlen(username) > NAME_SIZE){
+    error_and_exit("-password: username length is too long")
+  }
+
+  if (strlen(username) > PASSWORD_SIZE){
+    error_and_exit("-password: new password length is too long")
+  }
+
   strcpy(request->command, "password");
 
-  strcpy(request->argument1, argv[0]);
-  strcpy(request->argument2, argv[1]);
+  strcpy(request->argument1, username);
+  strcpy(request->argument2, password);
 
   return 0;
 }
@@ -102,7 +114,13 @@ static int handle_delete(int argc, char ** argv, struct request * request){
 
   strcpy(request->command, "delete");
 
-  strcpy(request->argument1, argv[0]);
+  char * username = argv[0];
+
+  if (strlen(username) > NAME_SIZE){
+    error_and_exit("-delete: username length is too long")
+  }
+
+  strcpy(request->argument1, username);
 
   return 0;
 }

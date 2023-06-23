@@ -17,7 +17,6 @@ int main(int argc, char *argv[]) {
   char response_buffer[BUFFER_SIZE]={0};
 
   get_request(request_buffer, request);
-  printf("%s", request_buffer); 
 
   ssize_t request_buffer_len = strlen(request_buffer);
 
@@ -65,7 +64,6 @@ int main(int argc, char *argv[]) {
     error_and_exit("recvfrom() failed: %s", strerror(errno))
   } else {
     response_buffer[num_bytes] = '\0';     
-    printf("Received: %s\n", response_buffer); 
   }
 
   struct popcorn_response * response = calloc(1, sizeof(struct popcorn_response));
@@ -73,28 +71,37 @@ int main(int argc, char *argv[]) {
 
   switch(response->status_code){
     case 20:{
+      printf("response: OK\n");
       if (response->response_value[0] != '\0')
-        printf("%s\n", response->response_value);
+        printf("value: %s\n", response->response_value);
       break;
     }
     case 40: {
-      error("Client error")
-      break;
-    }
-    case 50: {
-      error("Server error")
+      error("response: ERROR - Client error")
       break;
     }
     case 41: {
-      error("Bad credentials");
+      error("response: ERROR - Bad credentials");
       break;
     }
     case 42: {
-      error("User does not exists")
+      error("response: ERROR - User does not exists")
+      break;
+    }
+    case 43: {
+      error("response: ERROR - User is currently logged in")
+      break;
+    }
+    case 49: {
+      error("response: ERROR - Version not supported")
+      break;
+    }
+    case 50: {
+      error("response: ERROR - Server error")
       break;
     }
     default: {
-      error("Unknown status code")
+      error("response: ERROR - Unknown status code")
       break;
     }
   }
