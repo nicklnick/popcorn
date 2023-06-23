@@ -19,6 +19,8 @@ server_ptr init_server(int argc, char *argv[]);
 
 struct user_dir *get_user_dir(char *username, int len);
 
+int delete_user_dir(char *username, int len);
+
 server_ptr get_server_instance(void);
 
 int get_ipv4_server_socket(void);

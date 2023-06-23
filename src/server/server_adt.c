@@ -2,6 +2,7 @@
 #include "./popcorn/popcorn-adt.h"
 #include "selector/selector.h"
 #include "session/session.h"
+#include "utils/file-utils.h"
 #include "utils/logger.h"
 #include "wrapper-functions.h"
 #include <dirent.h>
@@ -93,8 +94,8 @@ static void register_user_pass(int argc, char *argv[]) {
     strcpy(server->users_dir[user_index]->password, password);
 }
 
-static int register_port(int argc, char * argv[]){
-    if (argc == 0){
+static int register_port(int argc, char *argv[]) {
+    if (argc == 0) {
         log(FATAL, "-p: Format is -p <port>");
     }
     return atoi(argv[0]);
@@ -149,7 +150,8 @@ struct server *init_server(int argc, char *argv[]) {
 
     if (argc <= 1) {
         log(FATAL, "Missing mail directory and users\n"
-                   "Usage: ./server [-p <port>] -d <mail_path> -a <user:password> -u <user:password> [-u "
+                   "Usage: ./server [-p <port>] -d <mail_path> -a "
+                   "<user:password> -u <user:password> [-u "
                    "user:password]...\n");
     }
     int server_port = PORT;
@@ -168,7 +170,7 @@ struct server *init_server(int argc, char *argv[]) {
     argc--;
     bool mail_dir_set = false;
     bool admin_set = false;
-    bool port_set =false;
+    bool port_set = false;
     int registered_users_count = 0;
     while (argc > 0) {
         if (strcmp(argv[0], "-d") == 0) {
@@ -192,8 +194,7 @@ struct server *init_server(int argc, char *argv[]) {
             argv++;
             register_user_pass(argc, argv);
             registered_users_count++;
-        }
-        else if (strcmp(argv[0], "-a") == 0) {
+        } else if (strcmp(argv[0], "-a") == 0) {
             if (!mail_dir_set) {
                 logv(FATAL, "%s: Mail directory needs to be specified first",
                      "-d")
@@ -205,32 +206,29 @@ struct server *init_server(int argc, char *argv[]) {
             argc--;
             argv++;
             register_user_admin(argc, argv);
-        } 
-        else if (strcmp(argv[0], "-p") == 0){
-            if (port_set){
+        } else if (strcmp(argv[0], "-p") == 0) {
+            if (port_set) {
                 logv(FATAL, "%s: Port was already specified", "-p")
             }
             port_set = true;
             argc--;
             argv++;
             server_port = register_port(argc, argv);
-        }
-        else {
+        } else {
             logv(FATAL, "Invalid command \"%s\"", argv[0])
         }
         argv++;
         argc--;
     }
 
-    
     if (registered_users_count < server->users_count) {
         logv(FATAL, "%s: Missing passwords for mail directory", "-u")
     }
 
-    if (!admin_set){
+    if (!admin_set) {
         logv(FATAL, "%s: Missing admin user for monitoring protocol", "-a")
     }
-    
+
     int ipv4_server_sock = setupIpv4ServerSocket(server_port);
     int ipv6_server_sock = setupIpv6ServerSocket(server_port);
 
@@ -269,6 +267,46 @@ struct user_dir *get_user_dir(char *username, int len) {
     }
 
     return NULL;
+}
+
+int delete_user_dir(char *username, int len) {
+    const char *mail_dir_path = get_mail_dir_path();
+    DIR *mail_dir = opendir(mail_dir_path);
+    int status = 0;
+
+    struct dirent *entry;
+    while ((entry = readdir(mail_dir)) != NULL) {
+        if (entry->d_type == DT_DIR) {
+            if (strcmp(entry->d_name, username) == 0) {
+                char user_mail_path[PATH_MAX] = {0};
+                strcpy(user_mail_path, get_mail_dir_path());
+                strcat(user_mail_path, "/");
+                strncat(user_mail_path, username, len);
+
+                DIR *user_dir = opendir(user_mail_path);
+                if (user_dir != NULL) {
+                    delete_files_from_dir(user_dir, user_mail_path);
+                    if (rmdir(user_mail_path) == 0) {
+                        logv(DEBUG, "Deleted directory: %s", user_mail_path)
+                    }
+
+                    if (get_file_count(user_dir) == 0) {
+                        status = 0;
+                    } else {
+                        status = 1;
+                    }
+
+                    closedir(user_dir);
+                }
+
+                break;
+            }
+        }
+    }
+
+    closedir(mail_dir);
+
+    return status;
 }
 
 int set_max_concurrent_clients(int max_count) {

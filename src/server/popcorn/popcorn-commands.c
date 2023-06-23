@@ -82,7 +82,12 @@ void popcorn_delete_user(char *argument1, char *argument2,
         return;
     }
 
-    response->status = OK;
+    if (delete_user_dir(username, strlen(username)) == 0) {
+        response->status = OK;
+        return;
+    }
+
+    response->status = SERVER_ERROR;
 }
 
 void popcorn_set_concurrent_users(char *argument1, char *argument2,
@@ -131,8 +136,9 @@ command_function get_command_function(char *command) {
 }
 
 static bool popcorn_auth(popcorn_request *request, popcorn_response *response) {
-    bool is_authenticated = validate_user_pass(request->username, request->password);
-    if (!is_authenticated){
+    bool is_authenticated =
+        validate_user_pass(request->username, request->password);
+    if (!is_authenticated) {
         response->status = BAD_CREDENTIALS;
     }
     return is_authenticated;

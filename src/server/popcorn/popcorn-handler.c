@@ -28,10 +28,10 @@ void popcorn_read(struct selector_key *key) {
         return;
     }
 
-    printf("REQUEST RECEIVED\nversion: %d\nauth: %s:%s\nreq-id: %d\ncommand: "
+    /*printf("REQUEST RECEIVED\nversion: %d\nauth: %s:%s\nreq-id: %d\ncommand: "
            "%s\n",
            request->version, request->username, request->password,
-           request->req_id, request->command);
+           request->req_id, request->command);*/
 
     popcorn_response *response = calloc(1, sizeof(popcorn_response));
     if (response == NULL) {
@@ -52,7 +52,7 @@ void popcorn_read(struct selector_key *key) {
         wbytes += snprintf(wbuffer + wbytes, 256 - wbytes, "value: %s\r\n",
                  response->value);
 
-    printf("RESPONSE SENT\n%s", wbuffer);
+    //printf("RESPONSE SENT\n%s", wbuffer);
 
     sendto(key->fd, wbuffer, wbytes, 0, (struct sockaddr *)&client,
            client_length);
