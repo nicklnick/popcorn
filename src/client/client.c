@@ -67,7 +67,7 @@ int main(int argc, char *argv[]) {
     printf("Received: %s\n", response_buffer); 
   }
 
-  struct popcorn_response * response = malloc(sizeof(response));
+  struct popcorn_response * response = malloc(sizeof(struct popcorn_response));
   parse_response(response_buffer, response);
 
   switch(response->status_code){
