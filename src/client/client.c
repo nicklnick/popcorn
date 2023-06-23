@@ -1,9 +1,10 @@
-#include <unistd.h>
-#include <sys/socket.h>
-#include <netdb.h>
-#include <errno.h>
 #include "request.h"
 #include "response_parser.h"
+#include <errno.h>
+#include <netdb.h>
+#include <sys/socket.h>
+#include <sys/time.h>
+#include <unistd.h>
 
 #define BUFFER_SIZE 1024
 #define POPCORN_PORT 2882
