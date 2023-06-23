@@ -92,14 +92,28 @@ command_function get_command_function(char *command) {
     return NULL;
 }
 
-void handle_request(popcorn_request *request, popcorn_response *response) {
-    command_function cfunc = get_command_function(request->command);
+static bool popcorn_auth(popcorn_request * request, popcorn_response *response){
+    user_admin * admin = get_admin();
+    if ( strcmp(admin->username, request->username) != 0 || strcmp(admin->password, request->password) != 0){
+        response->status = BAD_CREDENTIALS;
+        return false;
+    }
+    return true;
+}
 
-    if (cfunc == NULL)
-        puts("Command not found");
+void handle_request(popcorn_request *request, popcorn_response *response) {
+
+    bool is_authenticated = popcorn_auth(request,response);
+    if (is_authenticated){
+        command_function cfunc = get_command_function(request->command);
+        if (cfunc == NULL){
+            puts("Command not found");
+        }
+        cfunc(request->argument1, request->argument2, response);
+        response->status = OK;
+    }
 
     response->req_id = request->req_id;
     response->version = request->version;
 
-    cfunc(request->argument1, request->argument2, response);
 }

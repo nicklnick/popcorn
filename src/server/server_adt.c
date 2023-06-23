@@ -23,6 +23,8 @@ struct server {
     int ipv4_server_sock;
     int ipv6_server_sock;
 
+    user_admin * admin;       //authentication used for connecting to monitoring protocol
+
     struct user_dir **users_dir;
     int users_count;
 
@@ -38,6 +40,30 @@ struct server {
 };
 
 struct server *server = NULL;
+
+static void register_user_admin(int argc, char *argv[]){
+    if (argc == 0) {
+        log(FATAL, "-a: Usage: -a user:password")
+    }
+    server->admin = calloc(1, sizeof(user_admin));
+    const char *delimiter = ":";
+    char *username = strtok(argv[0], delimiter);
+    if (username == NULL) {
+        log(FATAL, "-a: Usage: -a user:password")
+    }
+    if (strlen(username) >= 16) {
+        log(FATAL, "-a: Username is too long (16 characters max)")
+    }
+    char *password = strtok(NULL, delimiter);
+    if (password == NULL) {
+        log(FATAL, "Usage: -a user:password")
+    }
+    if (strlen(password) >= 16) {
+        log(FATAL, "-a: Password for username is too long (16 characters max)")
+    }
+    strcpy(server->admin->username, username);
+    strcpy(server->admin->password, password);
+}
 
 static void register_user_pass(int argc, char *argv[]){
     if (argc == 0){
@@ -141,6 +167,7 @@ struct server *init_server(int argc, char *argv[]) {
     argv++;
     argc--;
     bool mail_dir_set = false;
+    bool admin_set = false;
     int registered_users_count = 0;
     while (argc > 0) {
         if (strcmp(argv[0], "-d") == 0) {
@@ -166,6 +193,19 @@ struct server *init_server(int argc, char *argv[]) {
             register_user_pass(argc, argv);
             registered_users_count++;
         }
+        
+        else if (strcmp(argv[0], "-a") == 0){
+            if (!mail_dir_set) {
+                logv(FATAL, "%s: Mail directory needs to be specified first", "-d")
+            }
+            if (admin_set){
+                logv(FATAL, "%s: Admin user already set", "-a")
+            }
+            admin_set=true;
+            argc--;
+            argv++;
+            register_user_admin(argc,argv);
+        }
         else {
             logv(FATAL, "Invalid command \"%s\"", argv[0])
         }
@@ -186,6 +226,12 @@ int get_ipv4_server_socket(void) {
 
 int get_ipv6_server_socket(void) {
     return server->ipv6_server_sock;
+}
+
+user_admin * get_admin(){
+    if (server == NULL)
+        return NULL;
+    return server->admin;
 }
 
 struct user_dir *get_user_dir(char *username, int len) {
@@ -331,6 +377,9 @@ void close_server() {
     close(server->ipv4_server_sock);
     close(server->ipv6_server_sock);
     free_clients();
+    if (server->admin != NULL){
+        free(server->admin);
+    }
     if (server->users_dir != NULL) {
         free_users_dir();
     }
