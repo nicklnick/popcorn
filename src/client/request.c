@@ -135,6 +135,13 @@ static int handle_conc(int argc, char **argv, struct request *request) {
 
     strcpy(request->command, "conc");
 
+    char * ptr;
+
+    int num = strtol(argv[0], &ptr, 10);
+    if (num <= 0 || num > CONC_MAX_VALUE || *ptr){
+        error_and_exit("conc: argument must be a number between 1 and 1000")
+    }
+
     strcpy(request->argument1, argv[0]);
 
     return 0;

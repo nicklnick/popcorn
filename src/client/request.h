@@ -8,6 +8,7 @@
 #define OPTION_SIZE   20
 #define COMMAND_SIZE  20
 #define ARGUMENT_SIZE 20
+#define CONC_MAX_VALUE 1000
 
 #define TOTAL_OPTIONS 6
 
