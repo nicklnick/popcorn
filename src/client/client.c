@@ -67,12 +67,13 @@ int main(int argc, char *argv[]) {
     printf("Received: %s\n", response_buffer); 
   }
 
-  struct popcorn_response * response = malloc(sizeof(struct popcorn_response));
+  struct popcorn_response * response = calloc(1, sizeof(struct popcorn_response));
   parse_response(response_buffer, response);
 
   switch(response->status_code){
     case 20:{
-      printf("%s\n", response->response_value);
+      if (response->response_value[0] != '\0')
+        printf("%s\n", response->response_value);
       break;
     }
     case 40: {
