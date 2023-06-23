@@ -3,6 +3,7 @@
 #include "server_adt.h"
 #include "session/session.h"
 #include "utils.h"
+#include "utils/logger.h"
 #include "wrapper-functions.h"
 #include <errno.h>
 #include <netdb.h>
@@ -13,7 +14,6 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include "utils/logger.h"
 
 #define MAX_CURRENT_CLIENTS 500
 
@@ -43,17 +43,18 @@ int main(int argc, char *argv[]) {
     init_server(argc, argv);
 
     int ipv4_server_sock = get_ipv4_server_socket();
-    logv(INFO, "Got %d IPv4 server sock", ipv4_server_sock)
+    logv(INFO, "Got [%d] IPv4 server sock", ipv4_server_sock)
 
     int ipv6_server_sock = get_ipv6_server_socket();
-    logv(INFO, "Got %d IPv6 server sock", ipv4_server_sock)
+    logv(INFO, "Got [%d] IPv6 server sock", ipv6_server_sock)
 
-    set_server_sock_handlers(&server_passive_accept, NULL);
+        set_server_sock_handlers(&server_passive_accept, NULL);
     struct fd_handler *server_sock_handler = malloc(sizeof(struct fd_handler));
     memcpy((void *)server_sock_handler, get_server_sock_fd_handler(),
            sizeof(struct fd_handler));
 
     int popcorn_sock = get_popcorn_server_sock();
+    logv(INFO, "Got [%d] Popcorn UDP server sock", popcorn_sock)
 
     // FIXME
     set_popcorn_sock_handlers(&popcorn_read, NULL);
@@ -70,8 +71,8 @@ int main(int argc, char *argv[]) {
             },
     };
 
-    fd_selector selector =
-        server_init_selector(ipv4_server_sock,ipv6_server_sock, server_sock_handler, &conf);
+    fd_selector selector = server_init_selector(
+        ipv4_server_sock, ipv6_server_sock, server_sock_handler, &conf);
     if (selector == NULL) {
         log(FATAL, "Could not init selector")
     }
@@ -119,16 +120,17 @@ static fd_selector server_init_selector(int ipv4_server_sock,
 
 void server_passive_accept(struct selector_key *key) {
     int client_socket = acceptConnection(key->fd);
+
+    if (server_is_full()) {
+        logv(DEBUG, "New client connection attempt with socket [%d] rejected: Server is full", client_socket)
+        close(client_socket);
+        return;
+    }
+
     logv(DEBUG, "New client with socket [%d]", client_socket)
 
-    session_ptr client_session = new_client_session(client_socket);
+        session_ptr client_session = new_client_session(client_socket);
     add_client(client_session);
     selector_register(key->s, client_socket, get_fd_handler(client_session),
                       OP_WRITE, client_session);
 }
-
-// void handler_read(struct selector_key * key)
-
-// key->data
-// key->fd: socket_server
-// key->s : selector
