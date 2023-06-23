@@ -39,7 +39,7 @@ struct server {
     client_node *clients;
     int clients_count;
 
-    int transferred_bytes_count;
+    long transferred_bytes_count;
     int historic_client_count;
 
     struct fd_handler *server_sock_handler;
@@ -220,19 +220,28 @@ char *get_mail_dir_path(void) {
 }
 
 unsigned int get_historic_client_count(void) {
+    if (server == NULL)
+        return 0;
+
     return server->historic_client_count;
 }
 
 unsigned int get_clients_count(void) {
+    if (server == NULL)
+        return 0;
+
     return server->clients_count;
 }
 
-unsigned int get_transferred_bytes(void) {
+unsigned long get_transferred_bytes(void) {
+    if (server == NULL)
+        return 0;
+
     return server->transferred_bytes_count;
 }
 
 void add_transferred_bytes(unsigned int nbytes) {
-    server->transferred_bytes_count = nbytes;
+    server->transferred_bytes_count += nbytes;
 }
 
 struct fd_handler *get_server_sock_fd_handler(void) {
@@ -317,7 +326,6 @@ static void free_users_dir(void) {
 static void free_clients(void) {
     client_node *current = server->clients;
     while (current != NULL) {
-        session_ptr client_session = current->client;
         client_node *to_free = current;
         current = to_free->next;
         free(to_free);

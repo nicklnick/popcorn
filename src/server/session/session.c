@@ -90,7 +90,7 @@ void session_read(struct selector_key *key) {
         size_t wsize = 0;
         char *wbuffer = (char *)buffer_write_ptr(&session->rbuffer, &wsize);
         ssize_t bytes_recv = _recv(session->socket, wbuffer, wsize, 0);
-        if(bytes_recv == 0){
+        if(bytes_recv <= 0){
             selector_unregister_fd(key->s,key->fd);
             return ;
         }

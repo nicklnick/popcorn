@@ -250,7 +250,7 @@ int transaction_list_command(session_ptr session, char *arg, int arg_len,
         strcat(mail_path, client_dirent->d_name);
         stat(mail_path, &f_stat);
 
-        current_line_len = sprintf(aux_buf, "%d %d\r\n", i, f_stat.st_size);
+        current_line_len = sprintf(aux_buf, "%d %ld\r\n", i, f_stat.st_size);
 
         if (current_line_len + total_len < buffsize) {
             strncat(response_buff, aux_buf, current_line_len);
@@ -304,7 +304,6 @@ int transaction_retr_command(session_ptr session, char *arg, int arg_len,
     strcat(mail_path, "/");
     strncat(mail_path, username, username_len);
     strcat(mail_path, "/");
-    int mail_path_base_len = strlen(mail_path);
 
     int i = 1;
 

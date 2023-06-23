@@ -9,7 +9,7 @@
 typedef struct server *server_ptr;
 
 struct user_dir {
-    char username[16];
+    char username[NAME_MAX];
     char password[16];
     bool is_open;
 };
@@ -30,7 +30,7 @@ unsigned int get_historic_client_count(void);
 
 unsigned int get_clients_count(void);
 
-unsigned int get_transferred_bytes(void);
+unsigned long get_transferred_bytes(void);
 
 void add_transferred_bytes(unsigned int nbytes);
 

@@ -11,8 +11,8 @@ typedef void (*command_function)(char *argument1, char *argument2,
 
 void popcorn_get_bytes(char *argument1, char *argument2,
                        popcorn_response *response) {
-    int transferred_bytes_count = get_transferred_bytes();
-    snprintf(response->value, 256, "%d", transferred_bytes_count);
+    unsigned long transferred_bytes_count = get_transferred_bytes();
+    snprintf(response->value, 256, "%ld", transferred_bytes_count);
 }
 
 void popcorn_get_current(char *argument1, char *argument2,

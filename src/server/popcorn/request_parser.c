@@ -143,7 +143,6 @@ static int dispatch(parser_state *state, char *key, char *value,
 }
 
 int parse_request(char *request_str, popcorn_request *request) {
-    printf("parsing\n");
     char reqbuff[256];
     strcpy(reqbuff, request_str);
 
