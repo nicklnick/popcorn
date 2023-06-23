@@ -55,7 +55,9 @@ int main(int argc, char *argv[]) {
 
     // FIXME
     set_popcorn_sock_handlers(&popcorn_read, NULL);
-    struct fd_handler *popcorn_sock_handler = get_popcorn_sock_fd_handler();
+    struct fd_handler *popcorn_sock_handler = malloc(sizeof(struct fd_handler));
+    memcpy((void *)popcorn_sock_handler, get_popcorn_sock_fd_handler(),
+           sizeof(struct fd_handler));
 
     struct selector_init conf = {
         .signal = SIGALRM,
@@ -81,6 +83,7 @@ int main(int argc, char *argv[]) {
 
     selector_destroy(selector);
     free(server_sock_handler);
+    free(popcorn_sock_handler);
     return 0;
 }
 

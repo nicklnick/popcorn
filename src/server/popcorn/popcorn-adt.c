@@ -46,6 +46,7 @@ struct popcorn *init_popcorn(void) {
     strcpy(popcorn_server->auth[PASS], ADMIN_PASS);*/
 
     popcorn_server->sock_fd_handler = _malloc(sizeof(fd_handler));
+    popcorn_server->sock_fd_handler->handle_close = close_popcorn_server_handler;
 
     return popcorn_server;
 }
@@ -67,4 +68,16 @@ void set_popcorn_sock_handlers(void (*handle_read)(struct selector_key *key),
                                void (*handle_write)(struct selector_key *key)) {
     popcorn_server->sock_fd_handler->handle_read = handle_read;
     popcorn_server->sock_fd_handler->handle_write = handle_write;
+}
+
+void close_popcorn_server(){
+    if(popcorn_server == NULL)
+        return ;
+    close(popcorn_server->server_sock);
+    free(popcorn_server->sock_fd_handler);
+    free(popcorn_server);
+}
+
+void close_popcorn_server_handler(struct selector_key * key){
+    close_popcorn_server();
 }
