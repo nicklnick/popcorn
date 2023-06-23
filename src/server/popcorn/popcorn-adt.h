@@ -8,9 +8,9 @@ typedef struct popcorn *popcorn_ptr;
 
 popcorn_ptr init_popcorn(void);
 
-int get_popcorn_server_sock(void);
+int get_popcorn_ipv4_server_sock(void);
 
-void set_popcorn_admin(char * username, char * password);
+void set_popcorn_admin(char *username, char *password);
 
 bool validate_user_pass(const char *user, const char *pass);
 
@@ -21,6 +21,8 @@ void set_popcorn_sock_handlers(void (*handle_read)(struct selector_key *key),
 
 void close_popcorn_server(void);
 
-void close_popcorn_server_handler(struct selector_key * key);
+void close_popcorn_server_handler(struct selector_key *key);
+
+int get_popcorn_ipv6_server_sock(void);
 
 #endif // POPCORN_ADT_H

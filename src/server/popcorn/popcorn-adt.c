@@ -20,7 +20,8 @@ typedef struct popcorn_admin {
 } popcorn_admin;
 
 struct popcorn {
-    int server_sock;
+    int server_ipv4_socket;
+    int server_ipv6_socket;
 
     popcorn_admin admin;
 
@@ -34,26 +35,39 @@ struct popcorn *init_popcorn(void) {
     if (popcorn_server != NULL)
         return popcorn_server;
 
-    int server_sock = setup_udp_ipv4_socket(POPCORN_PORT);
-    if (server_sock < 0) {
+    int server_ipv4_socket = setup_udp_ipv4_socket(POPCORN_PORT);
+    if (server_ipv4_socket < 0) {
+        perror(SETUP_SERVER_SOCKET_ERROR);
+        return NULL;
+    }
+
+    int server_ipv6_socket = setup_udp_ipv6_socket(POPCORN_PORT);
+    if (server_ipv6_socket < 0) {
         perror(SETUP_SERVER_SOCKET_ERROR);
         return NULL;
     }
 
     popcorn_server = _calloc(1, sizeof(struct popcorn));
-    popcorn_server->server_sock = server_sock;
+    popcorn_server->server_ipv4_socket = server_ipv4_socket;
+    popcorn_server->server_ipv6_socket = server_ipv6_socket;
 
     popcorn_server->sock_fd_handler = _malloc(sizeof(fd_handler));
-    popcorn_server->sock_fd_handler->handle_close = close_popcorn_server_handler;
+    popcorn_server->sock_fd_handler->handle_close =
+        close_popcorn_server_handler;
 
     return popcorn_server;
 }
 
-int get_popcorn_server_sock(void) {
-    return popcorn_server->server_sock;
+int get_popcorn_ipv4_server_sock(void) {
+    return popcorn_server->server_ipv4_socket;
 }
 
-void set_popcorn_admin(char * username, char * password){
+int get_popcorn_ipv6_server_sock(void) {
+    return popcorn_server->server_ipv6_socket;
+}
+
+
+void set_popcorn_admin(char *username, char *password) {
     strcpy(popcorn_server->admin.username, username);
     strcpy(popcorn_server->admin.password, password);
 }
@@ -73,14 +87,16 @@ void set_popcorn_sock_handlers(void (*handle_read)(struct selector_key *key),
     popcorn_server->sock_fd_handler->handle_write = handle_write;
 }
 
-void close_popcorn_server(){
-    if(popcorn_server == NULL)
-        return ;
-    close(popcorn_server->server_sock);
+void close_popcorn_server() {
+    if (popcorn_server == NULL)
+        return;
+    close(popcorn_server->server_ipv4_socket);
+    close(popcorn_server->server_ipv6_socket);
     free(popcorn_server->sock_fd_handler);
     free(popcorn_server);
+    popcorn_server = NULL;
 }
 
-void close_popcorn_server_handler(struct selector_key * key){
+void close_popcorn_server_handler(struct selector_key *key) {
     close_popcorn_server();
 }

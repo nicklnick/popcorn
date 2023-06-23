@@ -61,7 +61,24 @@ int setup_udp_ipv4_socket(int port) {
     addr.sin_port = htons(port);
 
     int server = _socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-    // TODO: ACCEPT IPV6
+
+    _bind(server, (struct sockaddr *)&addr, sizeof(addr));
+
+    return server;
+}
+
+int setup_udp_ipv6_socket(int port) {
+    log(INFO, "Setting up UDP IPv6 socket")
+
+    struct sockaddr_in6 addr;
+    memset(&addr, 0, sizeof(addr));
+    addr.sin6_family = AF_INET6;
+    addr.sin6_addr = in6addr_any;
+    addr.sin6_port = htons(port);
+
+    int server = _socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP);
+
+    setsockopt(server, IPPROTO_IPV6, IPV6_V6ONLY, &(int){ 1 }, sizeof(int));
 
     _bind(server, (struct sockaddr *)&addr, sizeof(addr));
 

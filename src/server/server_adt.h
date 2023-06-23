@@ -12,6 +12,7 @@ struct user_dir {
     char username[NAME_MAX];
     char password[16];
     bool is_open;
+    bool removed;
 };
 
 server_ptr init_server(int argc, char *argv[]);

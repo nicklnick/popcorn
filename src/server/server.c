@@ -45,7 +45,7 @@ int main(int argc, char *argv[]) {
     int ipv4_server_sock = get_ipv4_server_socket();
     logv(INFO, "Got [%d] IPv4 server sock", ipv4_server_sock)
 
-    int ipv6_server_sock = get_ipv6_server_socket();
+        int ipv6_server_sock = get_ipv6_server_socket();
     logv(INFO, "Got [%d] IPv6 server sock", ipv6_server_sock)
 
         set_server_sock_handlers(&server_passive_accept, NULL);
@@ -53,11 +53,14 @@ int main(int argc, char *argv[]) {
     memcpy((void *)server_sock_handler, get_server_sock_fd_handler(),
            sizeof(struct fd_handler));
 
-    int popcorn_sock = get_popcorn_server_sock();
-    logv(INFO, "Got [%d] Popcorn UDP server sock", popcorn_sock)
+    int popcorn_ipv4_socket = get_popcorn_ipv4_server_sock();
+    logv(INFO, "Got [%d] Popcorn UDP IPv4 server sock", popcorn_ipv4_socket)
 
-    // FIXME
-    set_popcorn_sock_handlers(&popcorn_read, NULL);
+        int popcorn_ipv6_socket = get_popcorn_ipv6_server_sock();
+    logv(INFO, "Got [%d] Popcorn UDP IPv6 server sock", popcorn_ipv6_socket)
+
+        // FIXME
+        set_popcorn_sock_handlers(&popcorn_read, NULL);
     struct fd_handler *popcorn_sock_handler = malloc(sizeof(struct fd_handler));
     memcpy((void *)popcorn_sock_handler, get_popcorn_sock_fd_handler(),
            sizeof(struct fd_handler));
@@ -77,8 +80,11 @@ int main(int argc, char *argv[]) {
         log(FATAL, "Could not init selector")
     }
 
-    selector_register(selector, popcorn_sock, popcorn_sock_handler, OP_READ,
-                      NULL);
+    selector_register(selector, popcorn_ipv4_socket, popcorn_sock_handler,
+                      OP_READ, NULL);
+
+    selector_register(selector, popcorn_ipv6_socket, popcorn_sock_handler,
+                      OP_READ, NULL);
 
     while (!done) {
         selector_select(selector);
@@ -122,8 +128,10 @@ void server_passive_accept(struct selector_key *key) {
     int client_socket = acceptConnection(key->fd);
 
     if (server_is_full()) {
-        logv(DEBUG, "New client connection attempt with socket [%d] rejected: Server is full", client_socket)
-        close(client_socket);
+        logv(DEBUG,
+             "New client connection attempt with socket [%d] rejected: Server "
+             "is full",
+             client_socket) close(client_socket);
         return;
     }
 

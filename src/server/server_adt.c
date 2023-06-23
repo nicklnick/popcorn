@@ -1,4 +1,5 @@
 #include "server_adt.h"
+#include "./popcorn/popcorn-adt.h"
 #include "selector/selector.h"
 #include "session/session.h"
 #include "utils/logger.h"
@@ -9,7 +10,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include "./popcorn/popcorn-adt.h"
 
 #define PORT                   1110
 #define MAX_CONCURRENT_CLIENTS 2
@@ -260,7 +260,8 @@ struct user_dir *get_user_dir(char *username, int len) {
     struct user_dir *user_dir;
 
     while (server->users_dir[i] != NULL) {
-        if (strncmp(username, server->users_dir[i]->username, len) == 0) {
+        if (strncmp(username, server->users_dir[i]->username, len) == 0 &&
+            !server->users_dir[i]->removed) {
             user_dir = server->users_dir[i];
             return user_dir;
         }
