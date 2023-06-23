@@ -13,12 +13,14 @@ void popcorn_get_bytes(char *argument1, char *argument2,
                        popcorn_response *response) {
     unsigned long transferred_bytes_count = get_transferred_bytes();
     snprintf(response->value, 256, "%ld", transferred_bytes_count);
+    response->status = OK;
 }
 
 void popcorn_get_current(char *argument1, char *argument2,
                          popcorn_response *response) {
     int current_clients_count = get_clients_count();
     snprintf(response->value, 256, "%d", current_clients_count);
+    response->status = OK;
 }
 
 void popcorn_get_history(char *argument1, char *argument2,
@@ -29,7 +31,32 @@ void popcorn_get_history(char *argument1, char *argument2,
 
 void popcorn_change_password(char *argument1, char *argument2,
                              popcorn_response *response) {
-    puts("popcorn_change_password");
+    char *username = argument1, *password = argument2;
+
+    if (username == NULL || password == NULL) {
+        response->status = CLIENT_ERROR;
+        return;
+    }
+
+    if (strlen(password) > PASSWORD_SIZE) {
+        response->status = CLIENT_ERROR;
+        return;
+    }
+
+    struct user_dir *user_dir = get_user_dir(username, strlen(username));
+    if (user_dir == NULL) {
+        response->status = USER_NOT_EXISTS;
+        return;
+    }
+
+    if (user_dir->is_open) {
+        response->status = USER_LOGGED_IN;
+        return;
+    }
+
+    strcpy(user_dir->password, password);
+
+    response->status = OK;
 }
 
 void popcorn_delete_user(char *argument1, char *argument2,
@@ -75,6 +102,4 @@ void handle_request(popcorn_request *request, popcorn_response *response) {
     response->version = request->version;
 
     cfunc(request->argument1, request->argument2, response);
-
-    response->status = OK;
 }

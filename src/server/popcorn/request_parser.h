@@ -21,6 +21,8 @@ typedef enum {
     CLIENT_ERROR = 40,
     BAD_CREDENTIALS = 41,
     USER_NOT_EXISTS = 42,
+    USER_LOGGED_IN = 43,
+    VERSION_NOT_SUPPORTED = 49,
     SERVER_ERROR = 50
 } status_code;
 
