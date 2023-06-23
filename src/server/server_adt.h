@@ -14,11 +14,6 @@ struct user_dir {
     bool is_open;
 };
 
-typedef struct user_admin {
-    char username[16];
-    char password[16];
-} user_admin;
-
 server_ptr init_server(int argc, char *argv[]);
 
 struct user_dir *get_user_dir(char *username, int len);
@@ -28,8 +23,6 @@ server_ptr get_server_instance(void);
 int get_ipv4_server_socket(void);
 
 int get_ipv6_server_socket(void);
-
-user_admin *get_admin();
 
 char *get_mail_dir_path(void);
 

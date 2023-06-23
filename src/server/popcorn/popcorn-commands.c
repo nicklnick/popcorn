@@ -1,5 +1,6 @@
 #include "popcorn-commands.h"
 #include "../server_adt.h"
+#include "popcorn-adt.h"
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
@@ -130,13 +131,11 @@ command_function get_command_function(char *command) {
 }
 
 static bool popcorn_auth(popcorn_request *request, popcorn_response *response) {
-    user_admin *admin = get_admin();
-    if (strcmp(admin->username, request->username) != 0 ||
-        strcmp(admin->password, request->password) != 0) {
+    bool is_authenticated = validate_user_pass(request->username, request->password);
+    if (!is_authenticated){
         response->status = BAD_CREDENTIALS;
-        return false;
     }
-    return true;
+    return is_authenticated;
 }
 
 void handle_request(popcorn_request *request, popcorn_response *response) {

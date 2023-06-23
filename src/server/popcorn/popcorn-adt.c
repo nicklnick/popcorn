@@ -14,9 +14,15 @@
 #define ADMIN_USER   "pop"
 #define ADMIN_PASS   "corn"
 
+typedef struct popcorn_admin {
+    char username[16];
+    char password[16];
+} popcorn_admin;
+
 struct popcorn {
     int server_sock;
-    char *auth[USER_PASS];
+
+    popcorn_admin admin;
 
     struct fd_handler *sock_fd_handler;
 };
@@ -37,14 +43,6 @@ struct popcorn *init_popcorn(void) {
     popcorn_server = _malloc(sizeof(struct popcorn));
     popcorn_server->server_sock = server_sock;
 
-    // save user and pass
-    /*popcorn_server->auth[USER] =
-        (char *)_calloc(strlen(ADMIN_USER), sizeof(char));
-    strcpy(popcorn_server->auth[USER], ADMIN_USER);
-    popcorn_server->auth[PASS] =
-        (char *)_calloc(strlen(ADMIN_PASS), sizeof(char));
-    strcpy(popcorn_server->auth[PASS], ADMIN_PASS);*/
-
     popcorn_server->sock_fd_handler = _malloc(sizeof(fd_handler));
     popcorn_server->sock_fd_handler->handle_close = close_popcorn_server_handler;
 
@@ -55,9 +53,14 @@ int get_popcorn_server_sock(void) {
     return popcorn_server->server_sock;
 }
 
-int validate_user_pass(const char *user, const char *pass) {
-    return strcmp(user, popcorn_server->auth[USER]) == 0 &&
-           strcmp(pass, popcorn_server->auth[PASS]) == 0;
+void set_popcorn_admin(char * username, char * password){
+    strcpy(popcorn_server->admin.username, username);
+    strcpy(popcorn_server->admin.password, password);
+}
+
+bool validate_user_pass(const char *user, const char *pass) {
+    return strcmp(popcorn_server->admin.username, user) == 0 &&
+           strcmp(popcorn_server->admin.password, pass) == 0;
 }
 
 struct fd_handler *get_popcorn_sock_fd_handler(void) {

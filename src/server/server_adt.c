@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include "./popcorn/popcorn-adt.h"
 
 #define PORT                   1110
 #define MAX_CONCURRENT_CLIENTS 2
@@ -22,8 +23,6 @@ typedef struct client_node {
 struct server {
     int ipv4_server_sock;
     int ipv6_server_sock;
-
-    user_admin *admin; // authentication used for connecting to monitoring protocol
 
     struct user_dir **users_dir;
     int users_count;
@@ -46,7 +45,6 @@ static void register_user_admin(int argc, char *argv[]) {
     if (argc == 0) {
         log(FATAL, "-a: Usage: -a user:password")
     }
-    server->admin = calloc(1, sizeof(user_admin));
     const char *delimiter = ":";
     char *username = strtok(argv[0], delimiter);
     if (username == NULL) {
@@ -62,8 +60,7 @@ static void register_user_admin(int argc, char *argv[]) {
     if (strlen(password) >= 16) {
         log(FATAL, "-a: Password for username is too long (16 characters max)")
     }
-    strcpy(server->admin->username, username);
-    strcpy(server->admin->password, password);
+    set_popcorn_admin(username, password);
 }
 
 static void register_user_pass(int argc, char *argv[]) {
@@ -231,12 +228,6 @@ int get_ipv6_server_socket(void) {
     return server->ipv6_server_sock;
 }
 
-user_admin *get_admin() {
-    if (server == NULL)
-        return NULL;
-    return server->admin;
-}
-
 struct user_dir *get_user_dir(char *username, int len) {
     if (server == NULL)
         return NULL;
@@ -390,9 +381,6 @@ void close_server() {
     close(server->ipv4_server_sock);
     close(server->ipv6_server_sock);
     free_clients();
-    if (server->admin != NULL) {
-        free(server->admin);
-    }
     if (server->users_dir != NULL) {
         free_users_dir();
     }

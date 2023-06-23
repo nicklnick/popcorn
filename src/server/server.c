@@ -3,7 +3,6 @@
 #include "server_adt.h"
 #include "session/session.h"
 #include "utils.h"
-#include "utils/logger.h"
 #include "wrapper-functions.h"
 #include <errno.h>
 #include <netdb.h>
@@ -14,6 +13,9 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include "utils/logger.h"
+
+#define MAX_CURRENT_CLIENTS 500
 
 static bool done = false;
 
@@ -37,8 +39,8 @@ int main(int argc, char *argv[]) {
     signal(SIGINT, sigterm_handler);
 
     // obtener path mail, obtener char ** pass
-    init_server(argc, argv);
     init_popcorn();
+    init_server(argc, argv);
 
     int ipv4_server_sock = get_ipv4_server_socket();
     logv(INFO, "Got %d IPv4 server sock", ipv4_server_sock)
@@ -119,7 +121,7 @@ void server_passive_accept(struct selector_key *key) {
     int client_socket = acceptConnection(key->fd);
     logv(DEBUG, "New client with socket [%d]", client_socket)
 
-        session_ptr client_session = new_client_session(client_socket);
+    session_ptr client_session = new_client_session(client_socket);
     add_client(client_session);
     selector_register(key->s, client_socket, get_fd_handler(client_session),
                       OP_WRITE, client_session);
