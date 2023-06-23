@@ -325,7 +325,7 @@ static void free_clients(void) {
     }
 }
 
-void close_server(void) {
+void close_server() {
     if(server == NULL)
         return ;
     close(server->ipv4_server_sock);
