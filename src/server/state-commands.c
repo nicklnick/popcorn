@@ -147,7 +147,8 @@ int transaction_stat_command(session_ptr session, char *arg, int arg_len,
     strcat(mail_dir, "/");
     strncat(mail_dir, username, username_len);
 
-    DIR *client_dir = opendir(mail_dir);
+    DIR *client_dir = get_client_dir_pt(session);
+    
     if (!client_dir) {
         logv(FATAL, "Could not open directory for user [%s]", username)
     }
@@ -320,7 +321,7 @@ int transaction_retr_command(session_ptr session, char *arg, int arg_len,
 
     struct dirent *client_dirent;
 
-    // Build user mail path
+    // Build user mail pathF
     char mail_path[MAILPATH_MAX] = {0};
     char username[NAME_MAX] = {0};
     int username_len = get_username(session, username);
