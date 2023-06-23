@@ -2,6 +2,7 @@
 #define POPCORN_ADT_H
 
 #include "../selector/selector.h"
+#include <stdbool.h>
 
 typedef struct popcorn *popcorn_ptr;
 
@@ -9,7 +10,9 @@ popcorn_ptr init_popcorn(void);
 
 int get_popcorn_server_sock(void);
 
-int validate_user_pass(const char *user, const char *pass);
+void set_popcorn_admin(char * username, char * password);
+
+bool validate_user_pass(const char *user, const char *pass);
 
 struct fd_handler *get_popcorn_sock_fd_handler(void);
 
