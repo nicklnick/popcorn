@@ -90,7 +90,7 @@ int transaction(state_machine *self, session_ptr session, char *buff,
     } else if (strncmp(event->command, DELE, nbytes) == 0) {
         int status = transaction_dele_command(session, event->argument1,
                                               event->arg1_len, response);
-        if (status == ERROR) {
+        if (status == STATUS_ERROR) {
             len = strlen(response);
             strncpy(buff, response, len);
             return len;
@@ -125,7 +125,7 @@ int end(state_machine *self, session_ptr session, char *buff, int nbytes) {
     printf("[END] +OK\n");
     self->current_state = END;
 
-    return SUCCESS;
+    return STATUS_SUCCESS;
 }
 
 StateFunc func_table[4] = {
