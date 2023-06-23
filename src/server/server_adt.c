@@ -227,8 +227,12 @@ unsigned int get_clients_count(void) {
     return server->clients_count;
 }
 
+unsigned int get_transferred_bytes(void) {
+    return server->transferred_bytes_count;
+}
+
 void add_transferred_bytes(unsigned int nbytes) {
-    return server->transferred_bytes_count += nbytes;
+    server->transferred_bytes_count = nbytes;
 }
 
 struct fd_handler *get_server_sock_fd_handler(void) {
