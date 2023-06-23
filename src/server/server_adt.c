@@ -340,6 +340,7 @@ int remove_client(session_ptr client) {
     if (current == NULL) {
         if (prev->client == client) {
             server->clients = NULL;
+            server->clients_count--;
             free(prev);
             return 0;
         }
