@@ -5,6 +5,7 @@
 #include <stdlib.h>
 
 #include "../server_adt.h"
+#include "../popcorn/popcorn-adt.h"
 
 typedef enum LOG_LEVEL {
     INFO,
@@ -35,6 +36,7 @@ char *level_description(LOG_LEVEL level);
         }                                                                      \
         if (level == FATAL) {                                                  \
             close_server();                                                    \
+            close_popcorn_server();                                            \
             exit(EXIT_FAILURE);                                                \
         }                                                                      \
     }
@@ -55,6 +57,7 @@ char *level_description(LOG_LEVEL level);
         }                                                                      \
         if (level == FATAL) {                                                  \
             close_server();                                                    \
+            close_popcorn_server();                                            \
             exit(EXIT_FAILURE);                                                \
         } /* close server? */                                                  \
     }

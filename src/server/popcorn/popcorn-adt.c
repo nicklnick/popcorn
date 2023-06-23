@@ -40,7 +40,7 @@ struct popcorn *init_popcorn(void) {
         return NULL;
     }
 
-    popcorn_server = _malloc(sizeof(struct popcorn));
+    popcorn_server = _calloc(1, sizeof(struct popcorn));
     popcorn_server->server_sock = server_sock;
 
     popcorn_server->sock_fd_handler = _malloc(sizeof(fd_handler));
