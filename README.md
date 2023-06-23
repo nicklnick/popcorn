@@ -28,7 +28,7 @@ donde:
 ### Ejecución del Client
 Para ejecutar el cliente se debe correr el siguiente comando:
 ```bash
-./client -a <user>:<password> <command> [args]
+./client -a <user>:<password> <command> [<args>]...
 ```
 donde `-a <user>:<password>` es el usuario y contraseña del administrador del server. Este debió haber sido especificado al ejecutar el server.
 Además para saber qué comandos están disponibles ejecutar (para el campo <command>):
