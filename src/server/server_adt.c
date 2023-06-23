@@ -93,6 +93,13 @@ static void register_user_pass(int argc, char *argv[]) {
     strcpy(server->users_dir[user_index]->password, password);
 }
 
+static int register_port(int argc, char * argv[]){
+    if (argc == 0){
+        log(FATAL, "Format is -p <port>");
+    }
+    return atoi(argv[0]);
+}
+
 static void init_users_dir(char *root_path) {
     log(INFO, "Initializing users_dir")
 
@@ -145,17 +152,9 @@ struct server *init_server(int argc, char *argv[]) {
                    "Usage: ./popcorn -d mail_path -u user:password [-u "
                    "user:password]...\n");
     }
-
-    int ipv4_server_sock = setupIpv4ServerSocket(PORT);
-    int ipv6_server_sock = setupIpv6ServerSocket(PORT);
-
-    if (ipv4_server_sock < 0) {
-        log(ERROR, SETUP_SERVER_SOCKET_ERROR) return NULL;
-    }
+    int server_port = PORT;
 
     server = calloc(1, sizeof(struct server));
-    server->ipv4_server_sock = ipv4_server_sock;
-    server->ipv6_server_sock = ipv6_server_sock;
 
     server->clients = NULL;
     server->clients_count = 0;
@@ -169,6 +168,7 @@ struct server *init_server(int argc, char *argv[]) {
     argc--;
     bool mail_dir_set = false;
     bool admin_set = false;
+    bool port_set =false;
     int registered_users_count = 0;
     while (argc > 0) {
         if (strcmp(argv[0], "-d") == 0) {
@@ -193,7 +193,6 @@ struct server *init_server(int argc, char *argv[]) {
             register_user_pass(argc, argv);
             registered_users_count++;
         }
-
         else if (strcmp(argv[0], "-a") == 0) {
             if (!mail_dir_set) {
                 logv(FATAL, "%s: Mail directory needs to be specified first",
@@ -206,11 +205,31 @@ struct server *init_server(int argc, char *argv[]) {
             argc--;
             argv++;
             register_user_admin(argc, argv);
-        } else {
+        } 
+        else if (strcmp(argv[0], "-p") == 0){
+            if (port_set){
+                logv(FATAL, "%s: port was already specified", "-p")
+            }
+            port_set = true;
+            argc--;
+            argv++;
+            server_port = register_port(argc, argv);
+        }
+        else {
             logv(FATAL, "Invalid command \"%s\"", argv[0])
         }
         argv++;
         argc--;
+    }
+
+    int ipv4_server_sock = setupIpv4ServerSocket(server_port);
+    int ipv6_server_sock = setupIpv6ServerSocket(server_port);
+
+    server->ipv4_server_sock = ipv4_server_sock;
+    server->ipv6_server_sock = ipv6_server_sock;
+
+    if (ipv4_server_sock < 0) {
+        log(ERROR, SETUP_SERVER_SOCKET_ERROR) return NULL;
     }
 
     if (registered_users_count < server->users_count) {
