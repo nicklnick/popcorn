@@ -27,6 +27,7 @@ void popcorn_get_history(char *argument1, char *argument2,
                          popcorn_response *response) {
     int historic_clients_count = get_historic_client_count();
     snprintf(response->value, 256, "%d", historic_clients_count);
+    response->status = OK;
 }
 
 void popcorn_change_password(char *argument1, char *argument2,
@@ -61,12 +62,48 @@ void popcorn_change_password(char *argument1, char *argument2,
 
 void popcorn_delete_user(char *argument1, char *argument2,
                          popcorn_response *response) {
-    puts("popcorn_delete_user");
+
+    char *username = argument1;
+
+    if (username == NULL) {
+        response->status = CLIENT_ERROR;
+        return;
+    }
+
+    struct user_dir *user_dir = get_user_dir(username, strlen(username));
+    if (user_dir == NULL) {
+        response->status = USER_NOT_EXISTS;
+        return;
+    }
+
+    if (user_dir->is_open) {
+        response->status = USER_LOGGED_IN;
+        return;
+    }
+
+    response->status = OK;
 }
 
 void popcorn_set_concurrent_users(char *argument1, char *argument2,
                                   popcorn_response *response) {
-    puts("popcorn_set_concurrent_users");
+
+    if (argument1 == NULL) {
+        response->status = CLIENT_ERROR;
+        return;
+    }
+
+    int max_count = atoi(argument1);
+    if (max_count <= 0) {
+        response->status = CLIENT_ERROR;
+        return;
+    }
+
+    if (set_max_concurrent_clients(max_count) != 0) {
+        response->status = SERVER_ERROR;
+        return;
+    }
+
+    response->status = OK;
 }
 
 typedef struct command_entry {
@@ -92,9 +129,10 @@ command_function get_command_function(char *command) {
     return NULL;
 }
 
-static bool popcorn_auth(popcorn_request * request, popcorn_response *response){
-    user_admin * admin = get_admin();
-    if ( strcmp(admin->username, request->username) != 0 || strcmp(admin->password, request->password) != 0){
+static bool popcorn_auth(popcorn_request *request, popcorn_response *response) {
+    user_admin *admin = get_admin();
+    if (strcmp(admin->username, request->username) != 0 ||
+        strcmp(admin->password, request->password) != 0) {
         response->status = BAD_CREDENTIALS;
         return false;
     }
@@ -103,17 +141,15 @@ static bool popcorn_auth(popcorn_request * request, popcorn_response *response){
 
 void handle_request(popcorn_request *request, popcorn_response *response) {
 
-    bool is_authenticated = popcorn_auth(request,response);
-    if (is_authenticated){
+    bool is_authenticated = popcorn_auth(request, response);
+    if (is_authenticated) {
         command_function cfunc = get_command_function(request->command);
-        if (cfunc == NULL){
+        if (cfunc == NULL) {
             puts("Command not found");
         }
         cfunc(request->argument1, request->argument2, response);
-        response->status = OK;
     }
 
     response->req_id = request->req_id;
     response->version = request->version;
-
 }

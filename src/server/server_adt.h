@@ -14,7 +14,7 @@ struct user_dir {
     bool is_open;
 };
 
-typedef struct user_admin{
+typedef struct user_admin {
     char username[16];
     char password[16];
 } user_admin;
@@ -29,7 +29,7 @@ int get_ipv4_server_socket(void);
 
 int get_ipv6_server_socket(void);
 
-user_admin * get_admin();
+user_admin *get_admin();
 
 char *get_mail_dir_path(void);
 
@@ -38,6 +38,10 @@ unsigned int get_historic_client_count(void);
 unsigned int get_clients_count(void);
 
 unsigned long get_transferred_bytes(void);
+
+int set_max_concurrent_clients(int max_count);
+
+int server_is_full();
 
 void add_transferred_bytes(unsigned int nbytes);
 

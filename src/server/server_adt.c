@@ -10,9 +10,9 @@
 #include <string.h>
 #include <unistd.h>
 
-#define PORT            1110
-
-#define ARRAY_INCREMENT 2
+#define PORT                   1110
+#define MAX_CONCURRENT_CLIENTS 2
+#define ARRAY_INCREMENT        2
 
 typedef struct client_node {
     session_ptr client;
@@ -23,7 +23,7 @@ struct server {
     int ipv4_server_sock;
     int ipv6_server_sock;
 
-    user_admin * admin;       //authentication used for connecting to monitoring protocol
+    user_admin *admin; // authentication used for connecting to monitoring protocol
 
     struct user_dir **users_dir;
     int users_count;
@@ -33,6 +33,7 @@ struct server {
     client_node *clients;
     int clients_count;
 
+    int max_concurrent_clients;
     long transferred_bytes_count;
     int historic_client_count;
 
@@ -41,7 +42,7 @@ struct server {
 
 struct server *server = NULL;
 
-static void register_user_admin(int argc, char *argv[]){
+static void register_user_admin(int argc, char *argv[]) {
     if (argc == 0) {
         log(FATAL, "-a: Usage: -a user:password")
     }
@@ -65,13 +66,13 @@ static void register_user_admin(int argc, char *argv[]){
     strcpy(server->admin->password, password);
 }
 
-static void register_user_pass(int argc, char *argv[]){
-    if (argc == 0){
+static void register_user_pass(int argc, char *argv[]) {
+    if (argc == 0) {
         log(FATAL, "Format is -u user:password")
     }
-    const char * delimiter = ":";
-    char * username = strtok(argv[0], delimiter);
-    if (username == NULL){
+    const char *delimiter = ":";
+    char *username = strtok(argv[0], delimiter);
+    if (username == NULL) {
         log(FATAL, "Format is -u user:password")
     }
     int user_index = -1;
@@ -80,15 +81,17 @@ static void register_user_pass(int argc, char *argv[]){
             user_index = i;
         }
     }
-    if (user_index == -1){
+    if (user_index == -1) {
         logv(FATAL, "No directory matches username \"%s\"", username)
     }
-    char * password = strtok(NULL, delimiter);
-    if (password == NULL){
+    char *password = strtok(NULL, delimiter);
+    if (password == NULL) {
         logv(FATAL, "No password provided for username \"%s\"", username)
     }
-    if (strlen(password) >= 16){
-        logv(FATAL, "Password for username \"%s\" is too long (16 characters max)", username)
+    if (strlen(password) >= 16) {
+        logv(FATAL,
+             "Password for username \"%s\" is too long (16 characters max)",
+             username)
     }
     strcpy(server->users_dir[user_index]->password, password);
 }
@@ -96,7 +99,7 @@ static void register_user_pass(int argc, char *argv[]){
 static void init_users_dir(char *root_path) {
     log(INFO, "Initializing users_dir")
 
-    DIR *mail_dir = opendir(root_path);
+        DIR *mail_dir = opendir(root_path);
     if (mail_dir == NULL) {
         log(FATAL, "opendir()")
     }
@@ -140,17 +143,17 @@ struct server *init_server(int argc, char *argv[]) {
     if (server != NULL)
         return server;
 
-    if (argc <= 1){
+    if (argc <= 1) {
         log(FATAL, "popcorn: Missing mail directory and users\n"
-                   "Usage: ./popcorn -d mail_path -u user:password [-u user:password]...\n");
+                   "Usage: ./popcorn -d mail_path -u user:password [-u "
+                   "user:password]...\n");
     }
 
     int ipv4_server_sock = setupIpv4ServerSocket(PORT);
     int ipv6_server_sock = setupIpv6ServerSocket(PORT);
 
     if (ipv4_server_sock < 0) {
-        log(ERROR, SETUP_SERVER_SOCKET_ERROR)
-        return NULL;
+        log(ERROR, SETUP_SERVER_SOCKET_ERROR) return NULL;
     }
 
     server = calloc(1, sizeof(struct server));
@@ -160,6 +163,7 @@ struct server *init_server(int argc, char *argv[]) {
     server->clients = NULL;
     server->clients_count = 0;
     server->historic_client_count = 0;
+    server->max_concurrent_clients = MAX_CONCURRENT_CLIENTS;
 
     server->server_sock_handler = malloc(sizeof(fd_handler));
     server->server_sock_handler->handle_close = close_server;
@@ -174,46 +178,45 @@ struct server *init_server(int argc, char *argv[]) {
             if (!mail_dir_set) {
                 argc--;
                 argv++;
-                if (argc == 0){
+                if (argc == 0) {
                     logv(FATAL, "%s: Format is %s mail_path", "-d", "-d")
                 }
                 init_users_dir(argv[0]);
                 mail_dir_set = true;
-            }
-            else{
+            } else {
                 logv(FATAL, "%s: Mail directory already set", "-d");
             }
-        }
-        else if (strcmp(argv[0], "-u") == 0){
-            if (!mail_dir_set){
-                logv(FATAL, "%s: Mail directory needs to be specified first", "-d")
+        } else if (strcmp(argv[0], "-u") == 0) {
+            if (!mail_dir_set) {
+                logv(FATAL, "%s: Mail directory needs to be specified first",
+                     "-d")
             }
             argc--;
             argv++;
             register_user_pass(argc, argv);
             registered_users_count++;
         }
-        
-        else if (strcmp(argv[0], "-a") == 0){
+
+        else if (strcmp(argv[0], "-a") == 0) {
             if (!mail_dir_set) {
-                logv(FATAL, "%s: Mail directory needs to be specified first", "-d")
+                logv(FATAL, "%s: Mail directory needs to be specified first",
+                     "-d")
             }
-            if (admin_set){
+            if (admin_set) {
                 logv(FATAL, "%s: Admin user already set", "-a")
             }
-            admin_set=true;
+            admin_set = true;
             argc--;
             argv++;
-            register_user_admin(argc,argv);
-        }
-        else {
+            register_user_admin(argc, argv);
+        } else {
             logv(FATAL, "Invalid command \"%s\"", argv[0])
         }
         argv++;
         argc--;
     }
 
-    if (registered_users_count < server->users_count){
+    if (registered_users_count < server->users_count) {
         logv(FATAL, "%s: Missing passwords for mail directory", "-u")
     }
 
@@ -228,7 +231,7 @@ int get_ipv6_server_socket(void) {
     return server->ipv6_server_sock;
 }
 
-user_admin * get_admin(){
+user_admin *get_admin() {
     if (server == NULL)
         return NULL;
     return server->admin;
@@ -250,6 +253,18 @@ struct user_dir *get_user_dir(char *username, int len) {
     }
 
     return NULL;
+}
+
+int set_max_concurrent_clients(int max_count) {
+    if (server->clients_count > max_count)
+        return 1;
+
+    server->max_concurrent_clients = max_count;
+    return 0;
+}
+
+int server_is_full() {
+    return server->clients_count == server->max_concurrent_clients;
 }
 
 char *get_mail_dir_path(void) {
@@ -296,8 +311,7 @@ int add_client(session_ptr client) {
     if (current == NULL) {
         current = malloc(sizeof(client_node));
         if (current == NULL) {
-            log(ERROR, "malloc()")
-            return -1;
+            log(ERROR, "malloc()") return -1;
         }
         current->next = NULL;
         current->client = client;
@@ -314,8 +328,7 @@ int add_client(session_ptr client) {
     }
     current = malloc(sizeof(client_node));
     if (current == NULL) {
-        log(ERROR, "malloc()")
-        return -1;
+        log(ERROR, "malloc()") return -1;
     }
     current->next = NULL;
     prev->next = current;
@@ -372,12 +385,12 @@ static void free_clients(void) {
 }
 
 void close_server() {
-    if(server == NULL)
-        return ;
+    if (server == NULL)
+        return;
     close(server->ipv4_server_sock);
     close(server->ipv6_server_sock);
     free_clients();
-    if (server->admin != NULL){
+    if (server->admin != NULL) {
         free(server->admin);
     }
     if (server->users_dir != NULL) {
