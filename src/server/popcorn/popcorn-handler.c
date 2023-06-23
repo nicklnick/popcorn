@@ -49,7 +49,7 @@ void popcorn_read(struct selector_key *key) {
                  response->version, response->req_id, response->status);
 
     if (response->value[0] != '\0')
-        snprintf(wbuffer + wbytes, 256 - wbytes, "value: %s\r\n",
+        wbytes += snprintf(wbuffer + wbytes, 256 - wbytes, "value: %s\r\n",
                  response->value);
 
     printf("RESPONSE SENT\n%s", wbuffer);
